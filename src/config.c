@@ -32,6 +32,21 @@ return {
         },
 }
 */
+
+Module str_to_module(const char* modstr)
+{
+    if (strcmp(modstr, "workspaces") == 0) return MOD_WORKSPACES;
+    if (strcmp(modstr, "window") == 0) return MOD_WINDOW;
+    if (strcmp(modstr, "clock") == 0) return MOD_CLOCK;
+    if (strcmp(modstr, "volume") == 0) return MOD_VOLUME;
+    if (strcmp(modstr, "mic") == 0) return MOD_MIC;
+    if (strcmp(modstr, "disk") == 0) return MOD_DISK;
+    if (strcmp(modstr, "ram") == 0) return MOD_RAM;
+    if (strcmp(modstr, "empty") == 0) return MOD_EMPTY;
+
+    return MOD_EMPTY;
+}
+
 void set_config_path(char* path, size_t size)
 {
     const char* configdir = "/.config/barbaris/config.lua";
@@ -117,6 +132,37 @@ void deserialize_font(lua_State* L, Config* cfg)
     cfg->fontpath = get_font_path(family, style);
 }
 
+Module* deserialize_module(lua_State* L, char* key)
+{
+    lua_getfield(L, -1, key);
+    int len = lua_rawlen(L, -1);
+    Module* mods = calloc(len, sizeof(Module));
+
+    if (mods != NULL) {
+        for (int i = 1; i <= len; i++) {
+            lua_rawgeti(L, -1, i);
+            const char* val = lua_tostring(L, -1);
+            mods[i] = str_to_module(val);
+            lua_pop(L, 1);
+        }
+    }
+
+    lua_pop(L, 1);
+
+    return mods;
+}
+
+void deserialize_modules(lua_State* L, Config* cfg)
+{
+    lua_getfield(L, -1, "modules");
+
+    cfg->modules.left = deserialize_module(L, "left");
+    cfg->modules.center = deserialize_module(L, "left");
+    cfg->modules.right = deserialize_module(L, "left");
+
+    lua_pop(L, 1);
+}
+
 void deserialize_config(lua_State* L, Config* cfg)
 {
     deserialize_config_root(L, cfg);
@@ -165,6 +211,10 @@ void free_config(Config* cfg)
         if (cfg->font.baseSize) {
             UnloadFont(cfg->font);
         }
+
+        if (cfg->modules.left != NULL) free(cfg->modules.left);
+        if (cfg->modules.center != NULL) free(cfg->modules.center);
+        if (cfg->modules.right != NULL) free(cfg->modules.right);
 
         free(cfg);
     }

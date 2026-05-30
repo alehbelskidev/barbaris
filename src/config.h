@@ -4,13 +4,14 @@
 #include "raylib.h"
 
 typedef enum {
-    MOD_WORKSPACE,
+    MOD_WORKSPACES,
     MOD_WINDOW,
     MOD_CLOCK,
     MOD_VOLUME,
     MOD_MIC,
     MOD_DISK,
     MOD_RAM,
+    MOD_EMPTY,
 } Module;
 
 typedef struct {
@@ -20,9 +21,9 @@ typedef struct {
 } Theme;
 
 typedef struct {
-    Module left;
-    Module center;
-    Module right;
+    Module* left;
+    Module* center;
+    Module* right;
 } Modules;
 
 typedef struct {
