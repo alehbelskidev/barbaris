@@ -10,7 +10,7 @@ CFLAGS += -Isrc
 # Wayland + Lua
 CFLAGS += $(shell pkg-config --cflags wayland-client lua5.4)
 LDLIBS  = $(shell pkg-config --libs wayland-client lua5.4)
-LDLIBS += -lGL -lm -lpthread -ldl -lrt
+LDLIBS += -lGL -lm -lpthread -ldl -lrt -lfontconfig
 
 # Libs
 LDLIBS += vendor/raylib/src/libraylib.a
