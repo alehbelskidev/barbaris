@@ -168,6 +168,7 @@ void deserialize_config(lua_State* L, Config* cfg)
     deserialize_config_root(L, cfg);
     deserialize_theme(L, cfg);
     deserialize_font(L, cfg);
+    deserialize_modules(L, cfg);
 }
 
 Config* load_config()
