@@ -166,8 +166,9 @@ UNIX-CONNECT:$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket.sock
 }⏎
 */
 
-void parse_active_window(State* state)
+int parse_active_window(State* state)
 {
+    int status = 0;
     char win[1024];
     hypr_request("j/activewindow", win, sizeof(win));
 
@@ -177,6 +178,8 @@ void parse_active_window(State* state)
         if (error_ptr != NULL) {
             fprintf(stderr, "Error before: %s\n", error_ptr);
         }
+        status = 1;
+        goto end;
     }
 
     const cJSON* winclass = cJSON_GetObjectItem(win_json, "class");
@@ -189,11 +192,14 @@ void parse_active_window(State* state)
                 wintitle->valuestring);
     }
 
+end:
     cJSON_Delete(win_json);
+    return status;
 }
 
-void parse_wokspaces(State* state)
+int parse_wokspaces(State* state)
 {
+    int status = 0;
     char workspaces[2048];
     hypr_request("j/workspaces", workspaces, sizeof(workspaces));
 
@@ -203,6 +209,8 @@ void parse_wokspaces(State* state)
         if (error_ptr != NULL) {
             fprintf(stderr, "Error before: %s\n", error_ptr);
         }
+        status = 1;
+        goto end;
     }
 
     const cJSON* ws;
@@ -217,21 +225,23 @@ void parse_wokspaces(State* state)
         {
             state->workspaces[i].id = id->valueint;
             strncpy(state->workspaces[i].name, name->valuestring, 127);
+            state->workspaces_count += 1;
         }
 
         i += 1;
-        state->workspaces_count += 1;
     }
 
+end:
     cJSON_Delete(ws_json);
+    return status;
 }
 
 State* init_state()
 {
     State* state = malloc(sizeof(State));
-    state->workspaces_count = 0;
 
     if (state != NULL) {
+        state->workspaces_count = 0;
         parse_active_window(state);
         parse_wokspaces(state);
     }
