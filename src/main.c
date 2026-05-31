@@ -2,12 +2,16 @@
 #include "GLFW/glfw3.h"
 #include "GLFW/glfw3native.h"
 #include "config.h"
+#include "hyprs.h"
 #include "raylib.h"
+#include "state.h"
 
 #define BAR_WIDTH 0
 
 int main(void)
 {
+    int fd = connect_hypr_sock();
+    State* state = init_state();
     Config* cfg = load_config();
     SetConfigFlags(FLAG_WINDOW_UNDECORATED | FLAG_WINDOW_TRANSPARENT);
 
@@ -30,6 +34,8 @@ int main(void)
     SetTargetFPS(60);
 
     while (!WindowShouldClose()) {
+        read_hypr_sock(fd);
+
         BeginDrawing();
         ClearBackground(cfg->theme.bg);
         DrawTextEx(cfg->font, "Barbaris", (Vector2){0, 0}, cfg->fontsize, 0,
@@ -37,7 +43,9 @@ int main(void)
         EndDrawing();
     }
 
+    free_state(state);
     free_config(cfg);
+    close_hypr_sock(fd);
     CloseWindow();
     return 0;
 }
