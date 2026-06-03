@@ -6,18 +6,14 @@
 #include "state.h"
 
 typedef struct {
-    float width;
-    float height;
-} Size;
-
-typedef struct {
     Vector2 offset;
-    Size size;
+    Vector2 size;
+    Vector2 padding;
 
     char* text;
 
     Texture* image;
-    Size image_size;
+    Vector2 image_size;
 } Block;
 
 void prep_ui();

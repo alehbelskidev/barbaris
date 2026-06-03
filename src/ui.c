@@ -35,10 +35,16 @@ void prep_workspaces(Block* blocks, int* counter)
             MeasureTextEx(config->font, ws->name, config->fontsize, 0);
 
         Block block = {0};
-        block.size.width = text_size.x;
-        block.size.height = text_size.y;
+
+        block.padding.x = 4;
+        block.padding.y = 0;
+
+        block.size.x = text_size.x + block.padding.x * 2;
+        block.size.y = text_size.y + block.padding.y * 2;
+
         block.offset.x = left_gap;
         block.offset.y = 0;
+
         block.text = ws->name;
 
         blocks[*counter] = block;
@@ -52,15 +58,20 @@ void prep_window(Block* blocks, int* counter)
 
     // TODO: add gap to config
     float left_gap = 0;
-    if (*counter > 0) left_gap = 8;
+    if (*counter > 0) left_gap = 32;
 
     Vector2 text_size =
         MeasureTextEx(config->font, state->active_window, config->fontsize, 0);
 
-    block.size.width = text_size.x;
-    block.size.height = text_size.y;
+    block.padding.x = 4;
+    block.padding.y = 0;
+
+    block.size.x = text_size.x + block.padding.x * 2;
+    block.size.y = text_size.y + block.padding.y * 2;
+
     block.offset.x = left_gap;
     block.offset.y = 0;
+
     block.text = state->active_window;
 
     blocks[*counter] = block;
@@ -101,13 +112,12 @@ void draw_ui()
         if (b->text != NULL) {
             left_offset += b->offset.x;
 
-            Vector2 pos = {left_offset,
-                           config->height / 2 - b->size.height / 2};
+            Vector2 pos = {left_offset, config->height / 2 - b->size.y / 2};
 
             DrawTextEx(config->font, b->text, pos, config->fontsize, 0,
                        config->theme.fg);
 
-            left_offset += b->size.width;
+            left_offset += b->size.x;
         }
     }
 }
