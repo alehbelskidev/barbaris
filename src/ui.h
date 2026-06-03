@@ -17,7 +17,6 @@ typedef struct {
 } Block;
 
 void prep_ui();
-void free_ui();
 void draw_ui();
 
 #endif  // !UI_H
