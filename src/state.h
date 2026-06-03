@@ -13,7 +13,9 @@ typedef struct {
     char active_window[512];
 } State;
 
-State* init_state();
-void free_state(State* state);
+void init_state();
+void free_state();
+
+extern State* state;
 
 #endif  // !STATE_H

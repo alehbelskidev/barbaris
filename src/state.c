@@ -6,6 +6,8 @@
 
 #include "hyprs.h"
 
+State* state;
+
 /*
 ❯ socat -
 UNIX-CONNECT:$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock
@@ -166,7 +168,7 @@ UNIX-CONNECT:$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket.sock
 }⏎
 */
 
-int parse_active_window(State* state)
+int parse_active_window()
 {
     int status = 0;
     char win[1024];
@@ -197,7 +199,7 @@ end:
     return status;
 }
 
-int parse_wokspaces(State* state)
+int parse_wokspaces()
 {
     int status = 0;
     char workspaces[2048];
@@ -236,20 +238,17 @@ end:
     return status;
 }
 
-State* init_state()
+void init_state()
 {
-    State* state = malloc(sizeof(State));
-
+    state = malloc(sizeof(State));
     if (state != NULL) {
         state->workspaces_count = 0;
         parse_active_window(state);
         parse_wokspaces(state);
     }
-
-    return state;
 }
 
-void free_state(State* state)
+void free_state()
 {
     if (state != NULL) {
         free(state);

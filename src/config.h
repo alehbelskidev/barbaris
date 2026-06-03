@@ -24,6 +24,9 @@ typedef struct {
     Module* left;
     Module* center;
     Module* right;
+    int left_count;
+    int center_count;
+    int right_count;
 } Modules;
 
 typedef struct {
@@ -35,8 +38,10 @@ typedef struct {
     Modules modules;
 } Config;
 
-Config* load_config();
-void load_config_font(Config* cfg);
-void free_config(Config* cfg);
+void load_config();
+void load_config_font();
+void free_config();
+
+extern Config* config;
 
 #endif  // !CONFIG_H

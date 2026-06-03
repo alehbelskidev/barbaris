@@ -1,25 +1,28 @@
 #define GLFW_EXPOSE_NATIVE_WAYLAND
+#define BAR_WIDTH 0
+
+#include <stdio.h>
+
 #include "GLFW/glfw3.h"
 #include "GLFW/glfw3native.h"
 #include "config.h"
 #include "hyprs.h"
 #include "raylib.h"
 #include "state.h"
-
-#define BAR_WIDTH 0
+#include "ui.h"
 
 int main(void)
 {
     int fd = connect_hypr_sock();
-    State* state = init_state();
-    Config* cfg = load_config();
+    init_state();
+    load_config();
     SetConfigFlags(FLAG_WINDOW_UNDECORATED | FLAG_WINDOW_TRANSPARENT);
 
     glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
 
-    InitWindow(BAR_WIDTH, cfg->height, "barbaris");
+    InitWindow(BAR_WIDTH, config->height, "barbaris");
 
-    load_config_font(cfg);
+    load_config_font();
 
     GLFWwindow* glfw_win = glfwGetCurrentContext();
 
@@ -28,23 +31,27 @@ int main(void)
     glfwWaylandZwlrSetAnchor(glfw_win, GLFW_WAYLAND_ZWLR_ANCHOR_TOP |
                                            GLFW_WAYLAND_ZWLR_ANCHOR_LEFT |
                                            GLFW_WAYLAND_ZWLR_ANCHOR_RIGHT);
-    glfwWaylandZwlrSetExclusiveZone(glfw_win, cfg->height);
+    glfwWaylandZwlrSetExclusiveZone(glfw_win, config->height);
     wl_surface_commit(glfwGetWaylandWindow(glfw_win));
 
     SetTargetFPS(60);
 
+    for (int i = 0; i < config->modules.left_count; i += 1) {
+        printf("[[modi=%d, mod=%d]]\n", i, config->modules.left[i]);
+    }
+
     while (!WindowShouldClose()) {
         read_hypr_sock(fd);
+        prep_ui();
 
         BeginDrawing();
-        ClearBackground(cfg->theme.bg);
-        DrawTextEx(cfg->font, "Barbaris", (Vector2){0, 0}, cfg->fontsize, 0,
-                   cfg->theme.fg);
+        ClearBackground(config->theme.bg);
+        draw_ui();
         EndDrawing();
     }
 
-    free_state(state);
-    free_config(cfg);
+    free_state();
+    free_config();
     close_hypr_sock(fd);
     CloseWindow();
     return 0;

@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+Config* config;
 /*
 return {
         height = 32,
@@ -26,7 +27,7 @@ return {
         },
 
         modules = {
-                left = { "workspaces" },
+                left = { "workspaces", "window" },
                 center = { "clock" },
                 right = { "volume", "disk" },
         },
@@ -54,10 +55,10 @@ void set_config_path(char* path, size_t size)
     snprintf(path, size, "%s%s", homedir, configdir);
 }
 
-void deserialize_config_root(lua_State* L, Config* cfg)
+void deserialize_config_root(lua_State* L)
 {
     lua_getfield(L, -1, "height");
-    cfg->height = lua_tointeger(L, -1);
+    config->height = lua_tointeger(L, -1);
     lua_pop(L, 1);
 }
 
@@ -76,12 +77,12 @@ void deserialize_color(lua_State* L, Color* color, char* key)
     lua_pop(L, 1);
 }
 
-void deserialize_theme(lua_State* L, Config* cfg)
+void deserialize_theme(lua_State* L)
 {
     lua_getfield(L, -1, "theme");
-    deserialize_color(L, &cfg->theme.fg, "fg");
-    deserialize_color(L, &cfg->theme.bg, "bg");
-    deserialize_color(L, &cfg->theme.accent, "accent");
+    deserialize_color(L, &config->theme.fg, "fg");
+    deserialize_color(L, &config->theme.bg, "bg");
+    deserialize_color(L, &config->theme.accent, "accent");
     lua_pop(L, 1);
 }
 
@@ -91,13 +92,13 @@ char* get_font_path(const char* family, const char* style)
     char fontstr[1024];
     snprintf(fontstr, sizeof(fontstr), "%s:style=%s", family, style);
 
-    FcConfig* fcfg = FcInitLoadConfigAndFonts();
+    FcConfig* fconfig = FcInitLoadConfigAndFonts();
     FcPattern* pat = FcNameParse((FcChar8*)family);
-    FcConfigSubstitute(fcfg, pat, FcMatchPattern);
+    FcConfigSubstitute(fconfig, pat, FcMatchPattern);
     FcDefaultSubstitute(pat);
 
     FcResult res;
-    FcPattern* font = FcFontMatch(fcfg, pat, &res);
+    FcPattern* font = FcFontMatch(fconfig, pat, &res);
 
     if (font) {
         FcChar8* fcfilepath;
@@ -113,7 +114,7 @@ char* get_font_path(const char* family, const char* style)
     return fontpath;
 }
 
-void deserialize_font(lua_State* L, Config* cfg)
+void deserialize_font(lua_State* L)
 {
     const char *family, *style;
 
@@ -122,17 +123,22 @@ void deserialize_font(lua_State* L, Config* cfg)
     family = lua_tostring(L, -1);
     lua_pop(L, 1);
     lua_getfield(L, -1, "size");
-    cfg->fontsize = lua_tointeger(L, -1);
+    config->fontsize = lua_tointeger(L, -1);
     lua_pop(L, 1);
     lua_getfield(L, -1, "style");
     style = lua_tostring(L, -1);
     lua_pop(L, 1);
     lua_pop(L, 1);
 
-    cfg->fontpath = get_font_path(family, style);
+    config->fontpath = get_font_path(family, style);
 }
 
-Module* deserialize_module(lua_State* L, char* key)
+typedef struct {
+    Module* mod;
+    int count;
+} DeserializeModRes;
+
+DeserializeModRes deserialize_module(lua_State* L, char* key)
 {
     lua_getfield(L, -1, key);
     int len = lua_rawlen(L, -1);
@@ -142,40 +148,47 @@ Module* deserialize_module(lua_State* L, char* key)
         for (int i = 1; i <= len; i++) {
             lua_rawgeti(L, -1, i);
             const char* val = lua_tostring(L, -1);
-            mods[i] = str_to_module(val);
+            mods[i - 1] = str_to_module(val);
             lua_pop(L, 1);
         }
     }
 
     lua_pop(L, 1);
 
-    return mods;
+    return (DeserializeModRes){mods, len};
 }
 
-void deserialize_modules(lua_State* L, Config* cfg)
+void deserialize_modules(lua_State* L)
 {
     lua_getfield(L, -1, "modules");
 
-    cfg->modules.left = deserialize_module(L, "left");
-    cfg->modules.center = deserialize_module(L, "left");
-    cfg->modules.right = deserialize_module(L, "left");
+    DeserializeModRes left = deserialize_module(L, "left");
+    DeserializeModRes center = deserialize_module(L, "center");
+    DeserializeModRes right = deserialize_module(L, "right");
+
+    config->modules.left = left.mod;
+    config->modules.center = center.mod;
+    config->modules.right = right.mod;
+
+    config->modules.left_count = left.count;
+    config->modules.center_count = center.count;
+    config->modules.right_count = right.count;
 
     lua_pop(L, 1);
 }
 
-void deserialize_config(lua_State* L, Config* cfg)
+void deserialize_config(lua_State* L)
 {
-    deserialize_config_root(L, cfg);
-    deserialize_theme(L, cfg);
-    deserialize_font(L, cfg);
-    deserialize_modules(L, cfg);
+    deserialize_config_root(L);
+    deserialize_theme(L);
+    deserialize_font(L);
+    deserialize_modules(L);
 }
 
-Config* load_config()
+void load_config()
 {
-    Config* cfg = calloc(1, sizeof(Config));
-
-    if (cfg != NULL) {
+    config = calloc(1, sizeof(Config));
+    if (config != NULL) {
         char config_path[512];
         set_config_path(config_path, sizeof(config_path));
         printf("path=%s\n", config_path);
@@ -184,39 +197,35 @@ Config* load_config()
         luaL_openlibs(L);
         if (luaL_dofile(L, config_path) != LUA_OK) {
             fprintf(stderr, "config error: %s\n", lua_tostring(L, -1));
-            return NULL;
         }
         if (!lua_istable(L, -1)) {
             fprintf(stderr, "config error: root is not a table\n");
-            return NULL;
         }
-        deserialize_config(L, cfg);
+        deserialize_config(L);
         lua_close(L);
     }
-
-    return cfg;
 }
 
-void load_config_font(Config* cfg)
+void load_config_font()
 {
-    if (cfg->fontpath != NULL) {
-        cfg->font = LoadFontEx(cfg->fontpath, cfg->fontsize, NULL, 0);
-        SetTextureFilter(cfg->font.texture, TEXTURE_FILTER_BILINEAR);
-        free(cfg->fontpath);
+    if (config->fontpath != NULL) {
+        config->font = LoadFontEx(config->fontpath, config->fontsize, NULL, 0);
+        SetTextureFilter(config->font.texture, TEXTURE_FILTER_BILINEAR);
+        free(config->fontpath);
     }
 }
 
-void free_config(Config* cfg)
+void free_config()
 {
-    if (cfg != NULL) {
-        if (cfg->font.baseSize) {
-            UnloadFont(cfg->font);
+    if (config != NULL) {
+        if (config->font.baseSize) {
+            UnloadFont(config->font);
         }
 
-        if (cfg->modules.left != NULL) free(cfg->modules.left);
-        if (cfg->modules.center != NULL) free(cfg->modules.center);
-        if (cfg->modules.right != NULL) free(cfg->modules.right);
+        if (config->modules.left != NULL) free(config->modules.left);
+        if (config->modules.center != NULL) free(config->modules.center);
+        if (config->modules.right != NULL) free(config->modules.right);
 
-        free(cfg);
+        free(config);
     }
 }
