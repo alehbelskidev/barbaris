@@ -45,10 +45,8 @@ typedef struct {
     Styles window;
 } Config;
 
-void load_config();
-void load_config_font();
-void free_config();
-
-extern Config* config;
+Config* config_load();
+void config_load_font(Config* c);
+void config_free(Config* c);
 
 #endif  // !CONFIG_H

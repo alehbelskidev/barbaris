@@ -6,6 +6,7 @@
 #include "GLFW/glfw3.h"
 #include "GLFW/glfw3native.h"
 #include "config.h"
+#include "context.h"
 #include "hyprs.h"
 #include "raylib.h"
 #include "state.h"
@@ -13,16 +14,17 @@
 
 int main(void)
 {
-    int fd = connect_hypr_sock();
-    init_state();
-    load_config();
+    int fd = hypr_connect_sock();
+    State* s = state_init();
+    Config* c = config_load();
+    Context* ctx = ctx_init(c, s);
     SetConfigFlags(FLAG_WINDOW_UNDECORATED | FLAG_WINDOW_TRANSPARENT);
 
     glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
 
-    InitWindow(BAR_WIDTH, config->height, "barbaris");
+    InitWindow(BAR_WIDTH, c->height, "barbaris");
 
-    load_config_font();
+    config_load_font(c);
 
     GLFWwindow* glfw_win = glfwGetCurrentContext();
 
@@ -31,28 +33,26 @@ int main(void)
     glfwWaylandZwlrSetAnchor(glfw_win, GLFW_WAYLAND_ZWLR_ANCHOR_TOP |
                                            GLFW_WAYLAND_ZWLR_ANCHOR_LEFT |
                                            GLFW_WAYLAND_ZWLR_ANCHOR_RIGHT);
-    glfwWaylandZwlrSetExclusiveZone(glfw_win, config->height);
+    glfwWaylandZwlrSetExclusiveZone(glfw_win, c->height);
     wl_surface_commit(glfwGetWaylandWindow(glfw_win));
 
     SetTargetFPS(60);
-
-    for (int i = 0; i < config->modules.left_count; i += 1) {
-        printf("[[modi=%d, mod=%d]]\n", i, config->modules.left[i]);
-    }
+    ui_prep(ctx);
 
     while (!WindowShouldClose()) {
-        read_hypr_sock(fd);
-        prep_ui();
+        hypr_read_sock(fd, ctx->s, &state_update_active_window);
+        ui_prep(ctx);
 
         BeginDrawing();
-        ClearBackground(config->theme.bg);
-        draw_ui();
+        ClearBackground(c->theme.bg);
+        ui_draw(ctx);
         EndDrawing();
     }
 
-    free_state();
-    free_config();
-    close_hypr_sock(fd);
+    state_free(s);
+    config_free(c);
+    ctx_free(ctx);
+    hypr_close_sock(fd);
     CloseWindow();
     return 0;
 }

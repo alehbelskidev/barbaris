@@ -10,7 +10,7 @@
 
 #include "ui.h"
 
-int connect_hypr_sock()
+int hypr_connect_sock()
 {
     char path[256];
     snprintf(path, sizeof(path), "%s/hypr/%s/.socket2.sock",
@@ -31,15 +31,14 @@ int connect_hypr_sock()
     return fd;
 }
 
-void read_hypr_sock(int fd)
+void hypr_read_sock(int fd, State* s,
+                    void (*state_update_active_window)(State*, char[108]))
 {
     size_t bufsize = 1024;
     char buf[bufsize];
     int n = read(fd, buf, bufsize - 1);
     if (n > 0) {
         buf[n] = '\0';
-        printf("HYPR buf = %s\n", buf);
-
         // example
         // activewindow>>Alacritty,nvim . ~/c/barbaris
         char event_t[64], arg[108];
@@ -50,12 +49,7 @@ void read_hypr_sock(int fd)
         }
 
         if (strcmp(event_t, "activewindow") == 0) {
-            if (strcmp(state->active_window, arg) != 0) {
-                memcpy(state->active_window, arg,
-                       sizeof(state->active_window) - 1);
-                state->active_window[sizeof(state->active_window) - 1] = '\0';
-                is_dirty = true;
-            }
+            state_update_active_window(s, arg);
         }
     }
 }
@@ -86,7 +80,7 @@ int hypr_request(const char* cmd, char* buf, size_t bufsize)
     return n;
 }
 
-void close_hypr_sock(int fd)
+void hypr_close_sock(int fd)
 {
     close(fd);
 }

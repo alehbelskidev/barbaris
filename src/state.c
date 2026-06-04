@@ -2,11 +2,10 @@
 
 #include <cjson/cJSON.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "hyprs.h"
-
-State* state;
 
 /*
 ❯ socat -
@@ -170,7 +169,7 @@ UNIX-CONNECT:$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket.sock
 
 // Str will be cut to 256b
 // TODO: do I really need to resolve that?
-int parse_active_window()
+int parse_active_window(State* s)
 {
     int status = 0;
     char win[1024];
@@ -192,7 +191,7 @@ int parse_active_window()
     if (cJSON_IsString(winclass) && (winclass->valuestring != NULL) &&
         cJSON_IsString(wintitle) && (wintitle->valuestring != NULL))
     {
-        sprintf(state->active_window, "%s - %s", winclass->valuestring,
+        sprintf(s->active_window, "%s - %s", winclass->valuestring,
                 wintitle->valuestring);
     }
 
@@ -201,7 +200,7 @@ end:
     return status;
 }
 
-int parse_wokspaces()
+int parse_wokspaces(State* s)
 {
     int status = 0;
     char workspaces[2048];
@@ -227,9 +226,9 @@ int parse_wokspaces()
         if (cJSON_IsString(name) && (name->valuestring != NULL) &&
             cJSON_IsNumber(id))
         {
-            state->workspaces[i].id = id->valueint;
-            strncpy(state->workspaces[i].name, name->valuestring, 127);
-            state->workspaces_count += 1;
+            s->workspaces[i].id = id->valueint;
+            strncpy(s->workspaces[i].name, name->valuestring, 127);
+            s->workspaces_count += 1;
         }
 
         i += 1;
@@ -240,19 +239,33 @@ end:
     return status;
 }
 
-void init_state()
+void state_update_active_window(State* s, char w[108])
 {
-    state = malloc(sizeof(State));
-    if (state != NULL) {
-        state->workspaces_count = 0;
-        parse_active_window(state);
-        parse_wokspaces(state);
+    if (strcmp(s->active_window, w) != 0) {
+        memcpy(s->active_window, w, sizeof(s->active_window) - 1);
+        s->active_window[sizeof(s->active_window) - 1] = '\0';
+        s->is_dirty = true;
     }
 }
 
-void free_state()
+State* state_init()
 {
-    if (state != NULL) {
-        free(state);
+    State* s = malloc(sizeof(State));
+
+    if (s != NULL) {
+        s->workspaces_count = 0;
+        // FYI: Should be true for initial calc
+        s->is_dirty = true;
+        parse_active_window(s);
+        parse_wokspaces(s);
+    }
+
+    return s;
+}
+
+void state_free(State* s)
+{
+    if (s != NULL) {
+        free(s);
     }
 }

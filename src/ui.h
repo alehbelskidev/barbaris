@@ -3,9 +3,8 @@
 
 #include <stdbool.h>
 
-#include "config.h"
+#include "context.h"
 #include "raylib.h"
-#include "state.h"
 
 typedef struct {
     Vector2 offset;
@@ -18,9 +17,7 @@ typedef struct {
     Vector2 image_size;
 } Block;
 
-void prep_ui();
-void draw_ui();
-
-extern bool is_dirty;
+void ui_prep(Context* ctx);
+void ui_draw(Context* ctx);
 
 #endif  // !UI_H
