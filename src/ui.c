@@ -17,7 +17,25 @@ static int right_count = 0;
 
 void prep_workspaces(Context* ctx, Block* blocks, int* counter)
 {
-    Vector2 average_container_size = {0};
+    float max_side = 0.0f;
+
+    for (int i = 0; i < ctx->s->workspaces_count; i++) {
+        HyprWorkspace* ws = &ctx->s->workspaces[i];
+
+        Vector2 text_size =
+            MeasureTextEx(ctx->c->font, ws->name, ctx->c->fontsize, 0);
+
+        float width_with_padding = text_size.x + ctx->c->workspaces.padding_x;
+        float height_with_padding = text_size.y + ctx->c->workspaces.padding_y;
+
+        float current_max = (width_with_padding > height_with_padding)
+                                ? width_with_padding
+                                : height_with_padding;
+
+        if (current_max > max_side) {
+            max_side = current_max;
+        }
+    }
 
     for (int i = 0; i < ctx->s->workspaces_count; i++) {
         HyprWorkspace* ws = &ctx->s->workspaces[i];
@@ -28,21 +46,9 @@ void prep_workspaces(Context* ctx, Block* blocks, int* counter)
         Block block = {0};
         block.text = ws->name;
 
-        Vector2 container_size = {text_size.x + ctx->c->workspaces.padding_x,
-                                  text_size.y + ctx->c->workspaces.padding_y};
+        block.container_size.x = max_side;
+        block.container_size.y = max_side;
 
-        if (container_size.x > average_container_size.x)
-            average_container_size.x = container_size.x;
-        if (container_size.y > average_container_size.y)
-            average_container_size.y = container_size.y;
-
-        if (average_container_size.x > average_container_size.y)
-            average_container_size.y = average_container_size.x;
-        if (average_container_size.y > average_container_size.x)
-            average_container_size.x = average_container_size.y;
-
-        block.container_size.x = average_container_size.x;
-        block.container_size.y = average_container_size.y;
         block.text_size = text_size;
         block.gap = ctx->c->workspaces.gap;
 
