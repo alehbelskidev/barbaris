@@ -30,12 +30,19 @@ typedef struct {
 } Modules;
 
 typedef struct {
+    int gap;
+} Styles;
+
+typedef struct {
     int height;
     Theme theme;
     Font font;
     char* fontpath;
     int fontsize;
     Modules modules;
+
+    Styles workspaces;
+    Styles window;
 } Config;
 
 void load_config();

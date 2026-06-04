@@ -177,12 +177,36 @@ void deserialize_modules(lua_State* L)
     lua_pop(L, 1);
 }
 
+void deserialize_workspaces(lua_State* L)
+{
+    lua_getfield(L, -1, "workspaces");
+
+    lua_getfield(L, -1, "gap");
+    config->workspaces.gap = lua_tointeger(L, -1);
+    lua_pop(L, 1);
+
+    lua_pop(L, 1);
+}
+
+void deserialize_window(lua_State* L)
+{
+    lua_getfield(L, -1, "window");
+
+    lua_getfield(L, -1, "gap");
+    config->window.gap = lua_tointeger(L, -1);
+    lua_pop(L, 1);
+
+    lua_pop(L, 1);
+}
+
 void deserialize_config(lua_State* L)
 {
     deserialize_config_root(L);
     deserialize_theme(L);
     deserialize_font(L);
     deserialize_modules(L);
+    deserialize_workspaces(L);
+    deserialize_window(L);
 }
 
 void load_config()

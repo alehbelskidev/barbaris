@@ -1,7 +1,3 @@
-/**
- *  TODO: split calculations from drawings
- */
-
 #include "ui.h"
 
 #include <errno.h>
@@ -27,9 +23,8 @@ void prep_workspaces(Block* blocks, int* counter)
     for (int i = 0; i < state->workspaces_count; i++) {
         HyprWorkspace* ws = &state->workspaces[i];
 
-        // TODO: add gap to config
         float left_gap = 0;
-        if (*counter > 0) left_gap = 8;
+        if (*counter > 0) left_gap = config->workspaces.gap;
 
         Vector2 text_size =
             MeasureTextEx(config->font, ws->name, config->fontsize, 0);
@@ -56,9 +51,9 @@ void prep_window(Block* blocks, int* counter)
 {
     Block block = {0};
 
-    // TODO: add gap to config
     float left_gap = 0;
-    if (*counter > 0) left_gap = 32;
+    printf("[window.gap=%d]\n", config->window.gap);
+    if (*counter > 0) left_gap = config->window.gap;
 
     Vector2 text_size =
         MeasureTextEx(config->font, state->active_window, config->fontsize, 0);
