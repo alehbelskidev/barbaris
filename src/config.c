@@ -233,7 +233,14 @@ void load_config()
 void load_config_font()
 {
     if (config->fontpath != NULL) {
-        config->font = LoadFontEx(config->fontpath, config->fontsize, NULL, 0);
+        int codepoints[256 + 256];
+        int count = 0;
+
+        for (int i = 32; i < 127; i++) codepoints[count++] = i;
+        for (int i = 0x400; i < 0x500; i++) codepoints[count++] = i;
+
+        config->font =
+            LoadFontEx(config->fontpath, config->fontsize, codepoints, count);
         SetTextureFilter(config->font.texture, TEXTURE_FILTER_BILINEAR);
         free(config->fontpath);
     }
