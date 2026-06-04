@@ -7,6 +7,8 @@
 typedef struct {
     State* s;
     Config* c;
+    Vector2 mouse_pos;
+    Vector2 mouse_delta;
 } Context;
 
 Context* ctx_init(Config* c, State* s);

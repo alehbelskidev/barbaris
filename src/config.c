@@ -9,30 +9,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-/*
-return {
-        height = 32,
-
-        theme = {
-                bg = "#1e1e2e",
-                fg = "#cdd6f4",
-                accent = "#89b4fa",
-        },
-
-        font = {
-                path = "Iosevka Nerd Font",
-                size = 14,
-                style = "Regular",
-        },
-
-        modules = {
-                left = { "workspaces", "window" },
-                center = { "clock" },
-                right = { "volume", "disk" },
-        },
-}
-*/
-
 Module str_to_module(const char* modstr)
 {
     if (strcmp(modstr, "workspaces") == 0) return MOD_WORKSPACES;
@@ -56,9 +32,23 @@ void set_config_path(char* path, size_t size)
 
 void deserialize_config_root(Config* c, lua_State* L)
 {
+    int height, padding_x, padding_y;
+
     lua_getfield(L, -1, "height");
-    c->height = lua_tointeger(L, -1);
+    height = lua_tointeger(L, -1);
     lua_pop(L, 1);
+
+    lua_getfield(L, -1, "padding_x");
+    padding_x = lua_tointeger(L, -1);
+    lua_pop(L, 1);
+
+    lua_getfield(L, -1, "padding_y");
+    padding_y = lua_tointeger(L, -1);
+    lua_pop(L, 1);
+
+    c->padding_x = padding_x;
+    c->padding_y = padding_y;
+    c->height = height + padding_y;
 }
 
 void deserialize_color(lua_State* L, Color* color, char* key)
@@ -184,6 +174,14 @@ void deserialize_workspaces(Config* c, lua_State* L)
     c->workspaces.gap = lua_tointeger(L, -1);
     lua_pop(L, 1);
 
+    lua_getfield(L, -1, "padding_x");
+    c->workspaces.padding_x = lua_tointeger(L, -1);
+    lua_pop(L, 1);
+
+    lua_getfield(L, -1, "padding_y");
+    c->workspaces.padding_y = lua_tointeger(L, -1);
+    lua_pop(L, 1);
+
     lua_pop(L, 1);
 }
 
@@ -193,6 +191,14 @@ void deserialize_window(Config* c, lua_State* L)
 
     lua_getfield(L, -1, "gap");
     c->window.gap = lua_tointeger(L, -1);
+    lua_pop(L, 1);
+
+    lua_getfield(L, -1, "padding_x");
+    c->window.padding_x = lua_tointeger(L, -1);
+    lua_pop(L, 1);
+
+    lua_getfield(L, -1, "padding_y");
+    c->window.padding_y = lua_tointeger(L, -1);
     lua_pop(L, 1);
 
     lua_pop(L, 1);

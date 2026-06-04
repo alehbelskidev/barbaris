@@ -18,12 +18,12 @@ int main(void)
     State* s = state_init();
     Config* c = config_load();
     Context* ctx = ctx_init(c, s);
+
     SetConfigFlags(FLAG_WINDOW_UNDECORATED | FLAG_WINDOW_TRANSPARENT);
 
     glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
 
     InitWindow(BAR_WIDTH, c->height, "barbaris");
-
     config_load_font(c);
 
     GLFWwindow* glfw_win = glfwGetCurrentContext();
@@ -40,8 +40,11 @@ int main(void)
     ui_prep(ctx);
 
     while (!WindowShouldClose()) {
-        hypr_read_sock(fd, ctx->s, &state_update_active_window);
         ui_prep(ctx);
+        ctx->mouse_pos = GetMousePosition();
+        ctx->mouse_delta = GetMouseDelta();
+        hypr_read_sock(fd, ctx->s, &state_update_active_window,
+                       &state_update_active_workspace);
 
         BeginDrawing();
         ClearBackground(c->theme.bg);

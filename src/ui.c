@@ -1,7 +1,6 @@
 #include "ui.h"
 
 #include <errno.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -18,27 +17,34 @@ static int right_count = 0;
 
 void prep_workspaces(Context* ctx, Block* blocks, int* counter)
 {
+    Vector2 average_container_size = {0};
+
     for (int i = 0; i < ctx->s->workspaces_count; i++) {
         HyprWorkspace* ws = &ctx->s->workspaces[i];
-
-        float left_gap = 0;
-        if (*counter > 0) left_gap = ctx->c->workspaces.gap;
 
         Vector2 text_size =
             MeasureTextEx(ctx->c->font, ws->name, ctx->c->fontsize, 0);
 
         Block block = {0};
-
-        block.padding.x = 4;
-        block.padding.y = 0;
-
-        block.size.x = text_size.x + block.padding.x * 2;
-        block.size.y = text_size.y + block.padding.y * 2;
-
-        block.offset.x = left_gap;
-        block.offset.y = 0;
-
         block.text = ws->name;
+
+        Vector2 container_size = {text_size.x + ctx->c->workspaces.padding_x,
+                                  text_size.y + ctx->c->workspaces.padding_y};
+
+        if (container_size.x > average_container_size.x)
+            average_container_size.x = container_size.x;
+        if (container_size.y > average_container_size.y)
+            average_container_size.y = container_size.y;
+
+        if (average_container_size.x > average_container_size.y)
+            average_container_size.y = average_container_size.x;
+        if (average_container_size.y > average_container_size.x)
+            average_container_size.x = average_container_size.y;
+
+        block.container_size.x = average_container_size.x;
+        block.container_size.y = average_container_size.y;
+        block.text_size = text_size;
+        block.gap = ctx->c->workspaces.gap;
 
         blocks[*counter] = block;
         (*counter)++;
@@ -48,23 +54,16 @@ void prep_workspaces(Context* ctx, Block* blocks, int* counter)
 void prep_window(Context* ctx, Block* blocks, int* counter)
 {
     Block block = {0};
-
-    float left_gap = 0;
-    if (*counter > 0) left_gap = ctx->c->window.gap;
+    block.text = ctx->s->active_window;
 
     Vector2 text_size =
         MeasureTextEx(ctx->c->font, ctx->s->active_window, ctx->c->fontsize, 0);
+    Vector2 container_size = {text_size.x + ctx->c->window.padding_x,
+                              text_size.y + ctx->c->window.padding_y};
 
-    block.padding.x = 4;
-    block.padding.y = 0;
-
-    block.size.x = text_size.x + block.padding.x * 2;
-    block.size.y = text_size.y + block.padding.y * 2;
-
-    block.offset.x = left_gap;
-    block.offset.y = 0;
-
-    block.text = ctx->s->active_window;
+    block.container_size = container_size;
+    block.text_size = text_size;
+    block.gap = ctx->c->window.gap;
 
     blocks[*counter] = block;
     (*counter)++;
@@ -98,20 +97,32 @@ void ui_prep(Context* ctx)
 
 void ui_draw(Context* ctx)
 {
-    // TODO: global panel gap
-    float left_offset = 8;
+    float left_offset = ctx->c->padding_x;
+
     for (int i = 0; i < left_count; i++) {
         Block* b = &left[i];
+        left_offset += b->gap;
+        Vector2 pos = {left_offset,
+                       ctx->c->height / 2 - b->container_size.y / 2};
+
+        Rectangle crect = {pos.x, pos.y, b->container_size.x,
+                           b->container_size.y};
+        bool hovered = CheckCollisionPointRec(ctx->mouse_pos, crect);
+        Vector2 text_pos = {
+            pos.x + b->container_size.x / 2 - b->text_size.x / 2,
+            pos.y + b->container_size.y / 2 - b->text_size.y / 2};
+
+        Color textcolor = ctx->c->theme.fg;
+        if (hovered) {
+            DrawRectangleRec(crect, ctx->c->theme.fg);
+            textcolor = ctx->c->theme.bg;
+        }
 
         if (b->text != NULL) {
-            left_offset += b->offset.x;
-
-            Vector2 pos = {left_offset, ctx->c->height / 2 - b->size.y / 2};
-
-            DrawTextEx(ctx->c->font, b->text, pos, ctx->c->fontsize, 0,
-                       ctx->c->theme.fg);
-
-            left_offset += b->size.x;
+            DrawTextEx(ctx->c->font, b->text, text_pos, ctx->c->fontsize, 0,
+                       textcolor);
         }
+
+        left_offset += b->container_size.x;
     }
 }

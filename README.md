@@ -48,3 +48,39 @@ There are exactly two `glfwCreateWindow` calls in that file __patch both__.
 Nothing is final here! Not sure about:
 - Manual patches vs fork or smth else.
 - Lua as config language.
+
+```lua
+return {
+	height = 40,
+
+	theme = {
+		bg = "#1e1e2e",
+		fg = "#cdd6f4",
+		accent = "#89b4fa",
+	},
+
+	font = {
+		family = "Iosevka Nerd Font",
+		size = 20,
+		style = "Regular",
+	},
+
+	modules = {
+		left = { "workspaces", "window" },
+		center = { "clock" },
+		right = { "volume", "disk" },
+	},
+
+	workspaces = {
+		gap = 8,
+		padding_x = 8,
+		padding_y = 8;
+	},
+
+	window = {
+		gap = 16,
+		padding_x = 4,
+		padding_y = 4;
+	},
+}
+```

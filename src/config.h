@@ -31,10 +31,14 @@ typedef struct {
 
 typedef struct {
     int gap;
+    int padding_x;
+    int padding_y;
 } Styles;
 
 typedef struct {
     int height;
+    int padding_x;
+    int padding_y;
     Theme theme;
     Font font;
     char* fontpath;

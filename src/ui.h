@@ -7,9 +7,9 @@
 #include "raylib.h"
 
 typedef struct {
-    Vector2 offset;
-    Vector2 size;
-    Vector2 padding;
+    Vector2 container_size;
+    Vector2 text_size;
+    float gap;
 
     char* text;
 
