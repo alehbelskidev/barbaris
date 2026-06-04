@@ -7,165 +7,15 @@
 
 #include "hyprs.h"
 
-/*
-❯ socat -
-UNIX-CONNECT:$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock
-activewindow>>Alacritty,nvim . ~/c/barbaris
-activewindowv2>>55bb32240070
-activewindow>>Alacritty,socat - UNIX-CONNECT ~
-activewindowv2>>55bb3367c3f0
-activewindow>>Alacritty,nvim . ~/c/barbaris
-activewindowv2>>55bb32240070
-activewindow>>Alacritty,socat - UNIX-CONNECT ~
-activewindowv2>>55bb3367c3f0
-openlayer>>wofi
-closelayer>>wofi
-activewindow>>Alacritty,socat - UNIX-CONNECT ~
-activewindowv2>>55bb3367c3f0
-windowtitle>>55bb33691090
-windowtitlev2>>55bb33691090,Thorium
-urgent>>55bb33691090
-openwindow>>55bb33691090,2,Thorium-browser,Thorium
-activewindow>>Thorium-browser,Thorium
-activewindowv2>>55bb33691090
-activewindow>>Alacritty,nvim . ~/c/barbaris
-activewindowv2>>55bb32240070
-activewindow>>Thorium-browser,Thorium
-activewindowv2>>55bb33691090
-activewindow>>Alacritty,nvim . ~/c/barbaris
-activewindowv2>>55bb32240070
-activewindow>>Thorium-browser,Thorium
-activewindowv2>>55bb33691090
-activewindow>>Alacritty,socat - UNIX-CONNECT ~
-activewindowv2>>55bb3367c3f0
-activewindow>>Alacritty,nvim . ~/c/barbaris
-activewindowv2>>55bb32240070
-activewindow>>Alacritty,socat - UNIX-CONNECT ~
-activewindowv2>>55bb3367c3f0
-activewindow>>Thorium-browser,Thorium
-activewindowv2>>55bb33691090
-activewindow>>Alacritty,nvim . ~/c/barbaris
-activewindowv2>>55bb32240070
-activewindow>>Thorium-browser,Thorium
-activewindowv2>>55bb33691090
-activewindow>>Alacritty,socat - UNIX-CONNECT ~
-activewindowv2>>55bb3367c3f0
-activewindow>>Thorium-browser,Thorium
-activewindowv2>>55bb33691090
-windowtitle>>55bb33696300
-windowtitlev2>>55bb33696300,thorium-browser
-closewindow>>55bb33691090
-activewindow>>Alacritty,socat - UNIX-CONNECT ~
-activewindowv2>>55bb3367c3f0
-
-~ via  v22.22.0
-❯ echo -n "j/workspaces" | socat -
-UNIX-CONNECT:$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket.sock
-[{
-    "id": 1,
-    "name": "1",
-    "monitor": "DP-3",
-    "monitorID": 0,
-    "windows": 1,
-    "hasfullscreen": false,
-    "lastwindow": "0x55bb322f2320",
-    "lastwindowtitle": "Интеграция приложения с Hyprland - Claude — Zen
-Browser", "ispersistent": false, "tiledLayout": "dwindle"
-},{
-    "id": 2,
-    "name": "2",
-    "monitor": "DP-3",
-    "monitorID": 0,
-    "windows": 2,
-    "hasfullscreen": false,
-    "lastwindow": "0x55bb3367c3f0",
-    "lastwindowtitle": "echo -n \"j/workspace ~",
-    "ispersistent": false,
-    "tiledLayout": "dwindle"
-},{
-    "id": 3,
-    "name": "3",
-    "monitor": "DP-3",
-    "monitorID": 0,
-    "windows": 1,
-    "hasfullscreen": false,
-    "lastwindow": "0x55bb3238f320",
-    "lastwindowtitle": "Telegram (1)",
-    "ispersistent": false,
-    "tiledLayout": "dwindle"
-},{
-    "id": 4,
-    "name": "4",
-    "monitor": "DP-3",
-    "monitorID": 0,
-    "windows": 1,
-    "hasfullscreen": false,
-    "lastwindow": "0x55bb3362a2d0",
-    "lastwindowtitle": "Steam",
-    "ispersistent": false,
-    "tiledLayout": "dwindle"
-},{
-    "id": 5,
-    "name": "5",
-    "monitor": "DP-3",
-    "monitorID": 0,
-    "windows": 2,
-    "hasfullscreen": false,
-    "lastwindow": "0x55bb33726d80",
-    "lastwindowtitle": "~",
-    "ispersistent": false,
-    "tiledLayout": "dwindle"
-},{
-    "id": 6,
-    "name": "6",
-    "monitor": "DP-3",
-    "monitorID": 0,
-    "windows": 2,
-    "hasfullscreen": false,
-    "lastwindow": "0x55bb33776740",
-    "lastwindowtitle": "~",
-    "ispersistent": false,
-    "tiledLayout": "dwindle"
-}]⏎
-
-~ via  v22.22.0
-❯ echo -n "j/activewindow" | socat -
-UNIX-CONNECT:$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket.sock
+void DEBUG_state(State* s)
 {
-    "address": "0x55df0602e220",
-    "mapped": true,
-    "hidden": false,
-    "visible": true,
-    "acceptsInput": true,
-    "at": [1288, 14],
-    "size": [1258, 1380],
-    "workspace": {
-        "id": 2,
-        "name": "2"
-    },
-    "floating": false,
-    "monitor": 0,
-    "class": "Alacritty",
-    "title": "echo -n \"j/activewin ~",
-    "initialClass": "Alacritty",
-    "initialTitle": "Alacritty",
-    "pid": 7133,
-    "xwayland": false,
-    "pinned": false,
-    "fullscreen": 0,
-    "fullscreenClient": 0,
-    "overFullscreen": false,
-    "grouped": [],
-    "tags": [],
-    "swallowing": "0x0",
-    "focusHistoryID": 0,
-    "inhibitingIdle": false,
-    "xdgTag": "",
-    "xdgDescription": "",
-    "contentType": "none",
-    "stableId": "1800003a"
-}⏎
-*/
+    printf("State* {\n");
+    printf("  workspaces_count    = %d\n", s->workspaces_count);
+    printf("  active_workspace_id = %d\n", s->active_workspace_id);
+    printf("  active_window[108]  = %s\n", s->active_window);
+    printf("  is_dirty            = %b\n", s->is_dirty);
+    printf("}\n");
+}
 
 // Str will be cut to 256b
 // TODO: do I really need to resolve that?
@@ -179,7 +29,7 @@ int parse_active_window(State* s)
     if (win_json == NULL) {
         const char* error_ptr = cJSON_GetErrorPtr();
         if (error_ptr != NULL) {
-            fprintf(stderr, "Error before: %s\n", error_ptr);
+            fprintf(stderr, "ERROR: parse_active_window: %s\n", error_ptr);
         }
         status = 1;
         goto end;
@@ -210,7 +60,7 @@ int parse_wokspaces(State* s)
     if (ws_json == NULL) {
         const char* error_ptr = cJSON_GetErrorPtr();
         if (error_ptr != NULL) {
-            fprintf(stderr, "Error before: %s\n", error_ptr);
+            fprintf(stderr, "ERROR: parse_workspace: %s\n", error_ptr);
         }
         status = 1;
         goto end;
@@ -239,11 +89,45 @@ end:
     return status;
 }
 
+int parse_active_workspace(State* s)
+{
+    int status = 0;
+    char ws[2048];
+    hypr_request("j/activeworkspace", ws, sizeof(ws));
+
+    cJSON* ws_json = cJSON_Parse(ws);
+    if (ws_json == NULL) {
+        const char* error_ptr = cJSON_GetErrorPtr();
+        if (error_ptr != NULL) {
+            fprintf(stderr, "ERROR: parse_active_workspace: %s\n", error_ptr);
+        }
+        status = 1;
+        goto end;
+    }
+
+    cJSON* id = cJSON_GetObjectItem(ws_json, "id");
+    if (cJSON_IsNumber(id)) {
+        s->active_workspace_id = id->valueint;
+    }
+
+end:
+    cJSON_Delete(ws_json);
+    return status;
+}
+
 void state_update_active_window(State* s, char w[108])
 {
     if (strcmp(s->active_window, w) != 0) {
         memcpy(s->active_window, w, sizeof(s->active_window) - 1);
         s->active_window[sizeof(s->active_window) - 1] = '\0';
+        s->is_dirty = true;
+    }
+}
+
+void state_update_active_workspace(State* s, int id)
+{
+    if (s->active_workspace_id != id) {
+        s->active_workspace_id = id;
         s->is_dirty = true;
     }
 }
@@ -256,8 +140,16 @@ State* state_init()
         s->workspaces_count = 0;
         // FYI: Should be true for initial calc
         s->is_dirty = true;
-        parse_active_window(s);
-        parse_wokspaces(s);
+
+        int status = 0;
+        status = parse_active_window(s);
+        status = parse_wokspaces(s);
+        status = parse_active_workspace(s);
+
+        if (status > 0) {
+            printf("ERROR: initializing State\n");
+            DEBUG_state(s);
+        }
     }
 
     return s;
