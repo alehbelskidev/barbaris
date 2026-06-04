@@ -3,6 +3,8 @@
 
 #include <stdlib.h>
 
+#include "state.h"
+
 int connect_hypr_sock();
 int hypr_request(const char* cmd, char* buf, size_t bufsize);
 void read_hypr_sock(int fd);

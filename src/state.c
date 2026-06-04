@@ -168,6 +168,8 @@ UNIX-CONNECT:$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket.sock
 }⏎
 */
 
+// Str will be cut to 256b
+// TODO: do I really need to resolve that?
 int parse_active_window()
 {
     int status = 0;

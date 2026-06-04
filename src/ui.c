@@ -16,7 +16,7 @@ static int center_count = 0;
 static Block right[MAX_BLOCKS];
 static int right_count = 0;
 
-static bool is_dirty = true;
+bool is_dirty = true;
 
 void prep_workspaces(Block* blocks, int* counter)
 {

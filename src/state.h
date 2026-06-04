@@ -10,7 +10,7 @@ typedef struct {
 typedef struct {
     int workspaces_count;
     HyprWorkspace workspaces[MAX_WORKSPACES];
-    char active_window[512];
+    char active_window[108];
 } State;
 
 void init_state();

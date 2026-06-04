@@ -8,6 +8,8 @@
 #include <sys/un.h>
 #include <unistd.h>
 
+#include "ui.h"
+
 int connect_hypr_sock()
 {
     char path[256];
@@ -17,7 +19,8 @@ int connect_hypr_sock()
     int fd = socket(AF_UNIX, SOCK_STREAM, 0);
     struct sockaddr_un addr = {};
     addr.sun_family = AF_UNIX;
-    strncpy(addr.sun_path, path, sizeof(addr.sun_path) - 1);
+    memcpy(addr.sun_path, path, sizeof(addr.sun_path) - 1);
+    addr.sun_path[sizeof(addr.sun_path) - 1] = '\0';
 
     if (connect(fd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
         close(fd);
@@ -36,6 +39,24 @@ void read_hypr_sock(int fd)
     if (n > 0) {
         buf[n] = '\0';
         printf("HYPR buf = %s\n", buf);
+
+        // example
+        // activewindow>>Alacritty,nvim . ~/c/barbaris
+        char event_t[64], arg[108];
+        int res_count = sscanf(buf, "%[^>]>>%[^\n]", event_t, arg);
+        if (res_count != 2) {
+            printf("Hypr event parse error! Got args (required 2): %d\n",
+                   res_count);
+        }
+
+        if (strcmp(event_t, "activewindow") == 0) {
+            if (strcmp(state->active_window, arg) != 0) {
+                memcpy(state->active_window, arg,
+                       sizeof(state->active_window) - 1);
+                state->active_window[sizeof(state->active_window) - 1] = '\0';
+                is_dirty = true;
+            }
+        }
     }
 }
 
@@ -49,7 +70,8 @@ int hypr_request(const char* cmd, char* buf, size_t bufsize)
 
     struct sockaddr_un addr = {0};
     addr.sun_family = AF_UNIX;
-    strncpy(addr.sun_path, path, sizeof(addr.sun_path) - 1);
+    memcpy(addr.sun_path, path, sizeof(addr.sun_path) - 1);
+    addr.sun_path[sizeof(addr.sun_path) - 1] = '\0';
 
     if (connect(fd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
         close(fd);

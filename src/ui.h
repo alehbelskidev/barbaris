@@ -1,6 +1,8 @@
 #ifndef UI_H
 #define UI_H
 
+#include <stdbool.h>
+
 #include "config.h"
 #include "raylib.h"
 #include "state.h"
@@ -18,5 +20,7 @@ typedef struct {
 
 void prep_ui();
 void draw_ui();
+
+extern bool is_dirty;
 
 #endif  // !UI_H
