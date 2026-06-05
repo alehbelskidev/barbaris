@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define MAX_BLOCKS 30
 
@@ -14,6 +15,51 @@ static int center_count = 0;
 
 static Block right[MAX_BLOCKS];
 static int right_count = 0;
+
+void DEBUG_block(Block* b)
+{
+    char mod[10];
+    switch (b->mod) {
+        case MOD_WORKSPACES:
+            strcpy(mod, "Workspaces");
+            break;
+        case MOD_WINDOW:
+            strcpy(mod, "Window");
+            break;
+        case MOD_CLOCK:
+            strcpy(mod, "Clock");
+            break;
+        case MOD_VOLUME:
+            strcpy(mod, "Volume");
+            break;
+        case MOD_MIC:
+            strcpy(mod, "Mic");
+            break;
+        case MOD_DISK:
+            strcpy(mod, "Disk");
+            break;
+        case MOD_RAM:
+            strcpy(mod, "RAM");
+            break;
+        case MOD_EMPTY:
+        default:
+            strcpy(mod, "Empty");
+            break;
+    }
+
+    printf("DEBUG: Block*\n");
+    printf("    mod=%s\n", mod);
+    printf("    container_size={x %f , y %f}\n", b->container_size.x,
+           b->container_size.y);
+    printf("    text_size={x %f , y %f}\n", b->text_size.x, b->text_size.y);
+    printf("    gap=%f\n", b->gap);
+    printf("    hover=%b\n", b->hover);
+    printf("    roundness=%f\n", b->roundness);
+    printf("    text=%s\n", b->text);
+    printf("    image=%b\n", b->image != NULL);
+    printf("    image_size={x %f , y %f}\n", b->image_size.x, b->image_size.y);
+    printf("\\--------------------------------------------\n");
+}
 
 void prep_workspaces(Context* ctx, Block* blocks, int* counter)
 {
@@ -51,6 +97,9 @@ void prep_workspaces(Context* ctx, Block* blocks, int* counter)
 
         block.text_size = text_size;
         block.gap = ctx->c->workspaces.gap;
+        block.hover = ctx->c->workspaces.hover;
+        block.roundness = ctx->c->workspaces.roundness;
+        block.mod = MOD_WORKSPACES;
 
         blocks[*counter] = block;
         (*counter)++;
@@ -70,6 +119,9 @@ void prep_window(Context* ctx, Block* blocks, int* counter)
     block.container_size = container_size;
     block.text_size = text_size;
     block.gap = ctx->c->window.gap;
+    block.hover = ctx->c->window.hover;
+    block.roundness = ctx->c->window.roundness;
+    block.mod = MOD_WINDOW;
 
     blocks[*counter] = block;
     (*counter)++;
@@ -119,8 +171,8 @@ void ui_draw(Context* ctx)
             pos.y + b->container_size.y / 2 - b->text_size.y / 2};
 
         Color textcolor = ctx->c->theme.fg;
-        if (hovered) {
-            DrawRectangleRec(crect, ctx->c->theme.fg);
+        if (hovered && b->hover) {
+            DrawRectangleRounded(crect, b->roundness, 6, ctx->c->theme.fg);
             textcolor = ctx->c->theme.bg;
         }
 

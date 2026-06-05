@@ -166,6 +166,8 @@ void deserialize_modules(Config* c, lua_State* L)
     lua_pop(L, 1);
 }
 
+// TODO: Merge OR extrac common logic from wss and window
+
 void deserialize_workspaces(Config* c, lua_State* L)
 {
     lua_getfield(L, -1, "workspaces");
@@ -180,6 +182,14 @@ void deserialize_workspaces(Config* c, lua_State* L)
 
     lua_getfield(L, -1, "padding_y");
     c->workspaces.padding_y = lua_tointeger(L, -1);
+    lua_pop(L, 1);
+
+    lua_getfield(L, -1, "roundness");
+    c->workspaces.roundness = (float)lua_tonumber(L, -1);
+    lua_pop(L, 1);
+
+    lua_getfield(L, -1, "hover");
+    c->workspaces.hover = lua_isnil(L, -1) ? true : lua_toboolean(L, -1);
     lua_pop(L, 1);
 
     lua_pop(L, 1);
@@ -199,6 +209,14 @@ void deserialize_window(Config* c, lua_State* L)
 
     lua_getfield(L, -1, "padding_y");
     c->window.padding_y = lua_tointeger(L, -1);
+    lua_pop(L, 1);
+
+    lua_getfield(L, -1, "roundness");
+    c->window.roundness = (float)lua_tonumber(L, -1);
+    lua_pop(L, 1);
+
+    lua_getfield(L, -1, "hover");
+    c->window.hover = lua_isnil(L, -1) ? true : lua_toboolean(L, -1);
     lua_pop(L, 1);
 
     lua_pop(L, 1);

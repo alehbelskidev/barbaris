@@ -3,13 +3,19 @@
 
 #include <stdbool.h>
 
+#include "config.h"
 #include "context.h"
 #include "raylib.h"
 
 typedef struct {
+    Module mod;
+
     Vector2 container_size;
     Vector2 text_size;
     float gap;
+
+    bool hover;
+    float roundness;
 
     char* text;
 

@@ -31,8 +31,13 @@ typedef struct {
 
 typedef struct {
     int gap;
+
     int padding_x;
     int padding_y;
+
+    float roundness;
+
+    bool hover;
 } Styles;
 
 typedef struct {
