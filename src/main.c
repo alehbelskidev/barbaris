@@ -2,6 +2,7 @@
 #define BAR_WIDTH 0
 
 #include <stdio.h>
+#include <time.h>
 
 #include "GLFW/glfw3.h"
 #include "GLFW/glfw3native.h"
@@ -46,6 +47,7 @@ int main(void)
         ctx->delta_time = GetFrameTime();
         hypr_read_sock(fd, ctx->s, &state_update_active_window,
                        &state_update_active_workspace);
+        state_update_time(s);
 
         BeginDrawing();
         ClearBackground(c->theme.bg);

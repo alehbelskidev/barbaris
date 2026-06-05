@@ -56,6 +56,7 @@ typedef struct {
 
     Styles workspaces;
     Styles window;
+    Styles clock;
 } Config;
 
 Config *config_load();

@@ -1,3 +1,5 @@
+// TODO: Block parse is similar, merge functionalities
+
 #include "ui.h"
 
 #include <errno.h>
@@ -20,51 +22,6 @@ static float right_alphas[MAX_BLOCKS] = {0};
 static int right_count = 0;
 
 #define ANIM_SPEED 5.5f
-
-void DEBUG_block(Block *b)
-{
-    char mod[15];
-    switch (b->mod) {
-        case MOD_WORKSPACES:
-            strcpy(mod, "Workspaces");
-            break;
-        case MOD_WINDOW:
-            strcpy(mod, "Window");
-            break;
-        case MOD_CLOCK:
-            strcpy(mod, "Clock");
-            break;
-        case MOD_VOLUME:
-            strcpy(mod, "Volume");
-            break;
-        case MOD_MIC:
-            strcpy(mod, "Mic");
-            break;
-        case MOD_DISK:
-            strcpy(mod, "Disk");
-            break;
-        case MOD_RAM:
-            strcpy(mod, "RAM");
-            break;
-        case MOD_EMPTY:
-        default:
-            strcpy(mod, "Empty");
-            break;
-    }
-
-    printf("DEBUG: Block*\n");
-    printf("    mod=%s\n", mod);
-    printf("    container_size={x %f , y %f}\n", b->container_size.x,
-           b->container_size.y);
-    printf("    text_size={x %f , y %f}\n", b->text_size.x, b->text_size.y);
-    printf("    gap=%f\n", b->gap);
-    printf("    hover=%b\n", b->hover);
-    printf("    roundness=%f\n", b->roundness);
-    printf("    text=%s\n", b->text);
-    printf("    image=%d\n", b->image != NULL);
-    printf("    image_size={x %f , y %f}\n", b->image_size.x, b->image_size.y);
-    printf("\\--------------------------------------------\n");
-}
 
 void prep_workspaces(Context *ctx, Block *blocks, int *counter)
 {
@@ -118,7 +75,7 @@ void prep_window(Context *ctx, Block *blocks, int *counter)
     block.text = ctx->s->active_window;
 
     Vector2 text_size =
-        MeasureTextEx(ctx->c->font, ctx->s->active_window, ctx->c->fontsize, 0);
+        MeasureTextEx(ctx->c->font, block.text, ctx->c->fontsize, 0);
     Vector2 container_size = {text_size.x + ctx->c->window.padding_x,
                               text_size.y + ctx->c->window.padding_y};
 
@@ -128,6 +85,27 @@ void prep_window(Context *ctx, Block *blocks, int *counter)
     block.hover = ctx->c->window.hover;
     block.roundness = ctx->c->window.roundness;
     block.mod = MOD_WINDOW;
+
+    blocks[*counter] = block;
+    (*counter)++;
+}
+
+void prep_clock(Context *ctx, Block *blocks, int *counter)
+{
+    Block block = {0};
+    block.text = ctx->s->time;
+
+    Vector2 text_size =
+        MeasureTextEx(ctx->c->font, block.text, ctx->c->fontsize, 0);
+    Vector2 container_size = {text_size.x + ctx->c->clock.padding_x,
+                              text_size.y + ctx->c->clock.padding_y};
+
+    block.container_size = container_size;
+    block.text_size = text_size;
+    block.gap = ctx->c->clock.gap;
+    block.hover = ctx->c->clock.hover;
+    block.roundness = ctx->c->clock.roundness;
+    block.mod = MOD_CLOCK;
 
     blocks[*counter] = block;
     (*counter)++;
@@ -143,6 +121,9 @@ void prep_module(Context *ctx, Module *m, int count, Block *blocks,
         if (m[i] == MOD_WINDOW) {
             prep_window(ctx, blocks, counter);
         }
+        if (m[i] == MOD_CLOCK) {
+            prep_clock(ctx, blocks, counter);
+        }
     }
 }
 
@@ -152,23 +133,30 @@ void ui_prep(Context *ctx)
         left_count = 0;
         center_count = 0;
         right_count = 0;
+
         prep_module(ctx, ctx->c->modules.left, ctx->c->modules.left_count, left,
                     &left_count);
+        prep_module(ctx, ctx->c->modules.center, ctx->c->modules.center_count,
+                    center, &center_count);
+        prep_module(ctx, ctx->c->modules.right, ctx->c->modules.right_count,
+                    right, &right_count);
 
         ctx->s->is_dirty = false;
     }
 }
 
-void ui_draw(Context *ctx)
+void draw_module(Context *ctx, float start_offset, Block *blocks, float *alphas,
+                 int count)
 {
-    float left_offset = ctx->c->padding_x;
+    if (count <= 0) return;
 
-    for (int i = 0; i < left_count; i++) {
-        Block *b = &left[i];
+    float offset = start_offset;
 
-        left_offset += b->gap;
-        Vector2 pos = {left_offset,
-                       ctx->c->height / 2 - b->container_size.y / 2};
+    for (int i = 0; i < count; i++) {
+        Block *b = &blocks[i];
+
+        offset += b->gap;
+        Vector2 pos = {offset, ctx->c->height / 2 - b->container_size.y / 2};
 
         Rectangle crect = {pos.x, pos.y, b->container_size.x,
                            b->container_size.y};
@@ -180,16 +168,16 @@ void ui_draw(Context *ctx)
         Color textcolor = ctx->c->theme.fg;
 
         if (hovered && b->hover) {
-            left_alphas[i] += ANIM_SPEED * ctx->delta_time;
+            alphas[i] += ANIM_SPEED * ctx->delta_time;
         } else {
-            left_alphas[i] -= ANIM_SPEED * ctx->delta_time;
+            alphas[i] -= ANIM_SPEED * ctx->delta_time;
         }
-        if (left_alphas[i] < 0) left_alphas[i] = 0;
-        if (left_alphas[i] > 1) left_alphas[i] = 1;
+        if (alphas[i] < 0) alphas[i] = 0;
+        if (alphas[i] > 1) alphas[i] = 1;
 
         if (hovered && b->hover) {
             Color fg = ctx->c->theme.fg;
-            fg.a = (unsigned char)(left_alphas[i] * 255);
+            fg.a = (unsigned char)(alphas[i] * 255);
 
             DrawRectangleRounded(crect, b->roundness, 3, fg);
             textcolor = ctx->c->theme.bg;
@@ -198,8 +186,6 @@ void ui_draw(Context *ctx)
             textcolor = ctx->c->theme.bg;
         }
 
-        // printf("block ws id=%d == active ws id=%d\n", b->workspace_id,
-        //        ctx->s->active_workspace_id);
         if (b->text != NULL) {
             Font *font = b->workspace_id == ctx->s->active_workspace_id
                              ? &ctx->c->font_bold
@@ -209,6 +195,31 @@ void ui_draw(Context *ctx)
                        textcolor);
         }
 
-        left_offset += b->container_size.x;
+        offset += b->container_size.x;
     }
+}
+
+void draw_left(Context *ctx)
+{
+    float left_offset = ctx->c->padding_x;
+    draw_module(ctx, left_offset, left, left_alphas, left_count);
+}
+
+void draw_center(Context *ctx)
+{
+    float total_width = 0;
+
+    for (int i = 0; i < center_count; i++) {
+        Block *b = &center[i];
+        total_width += b->gap + b->container_size.x;
+    }
+    float center_offset = (GetScreenWidth() / 2) - (total_width / 2);
+
+    draw_module(ctx, center_offset, center, center_alphas, center_count);
+}
+
+void ui_draw(Context *ctx)
+{
+    draw_left(ctx);
+    draw_center(ctx);
 }

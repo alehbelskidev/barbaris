@@ -1,3 +1,5 @@
+// TODO: styled objects are similare merge similar deserialize functions
+
 #include "config.h"
 
 #include <fontconfig/fontconfig.h>
@@ -226,6 +228,33 @@ void deserialize_window(Config *c, lua_State *L)
     lua_pop(L, 1);
 }
 
+void deserialize_clock(Config *c, lua_State *L)
+{
+    lua_getfield(L, -1, "clock");
+
+    lua_getfield(L, -1, "gap");
+    c->clock.gap = lua_tointeger(L, -1);
+    lua_pop(L, 1);
+
+    lua_getfield(L, -1, "padding_x");
+    c->clock.padding_x = lua_tointeger(L, -1);
+    lua_pop(L, 1);
+
+    lua_getfield(L, -1, "padding_y");
+    c->clock.padding_y = lua_tointeger(L, -1);
+    lua_pop(L, 1);
+
+    lua_getfield(L, -1, "roundness");
+    c->clock.roundness = (float)lua_tonumber(L, -1);
+    lua_pop(L, 1);
+
+    lua_getfield(L, -1, "hover");
+    c->clock.hover = lua_isnil(L, -1) ? true : lua_toboolean(L, -1);
+    lua_pop(L, 1);
+
+    lua_pop(L, 1);
+}
+
 void deserialize_config(Config *c, lua_State *L)
 {
     deserialize_config_root(c, L);
@@ -234,6 +263,7 @@ void deserialize_config(Config *c, lua_State *L)
     deserialize_modules(c, L);
     deserialize_workspaces(c, L);
     deserialize_window(c, L);
+    deserialize_clock(c, L);
 }
 
 Config *config_load()

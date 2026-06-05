@@ -16,6 +16,7 @@ typedef struct {
     char active_window[108];
 
     bool is_dirty;
+    char time[128];
 } State;
 
 void DEBUG_state(State *s);
@@ -23,6 +24,7 @@ void DEBUG_state(State *s);
 State *state_init();
 void state_update_active_window(State *s, char w[108]);
 void state_update_active_workspace(State *s, int id);
+void state_update_time(State *s);
 void state_free(State *s);
 
 #endif  // !STATE_H

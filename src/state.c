@@ -1,9 +1,11 @@
 #include "state.h"
 
 #include <cjson/cJSON.h>
+#include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "hyprs.h"
 
@@ -132,6 +134,15 @@ void state_update_active_workspace(State *s, int id)
     }
 }
 
+void state_update_time(State *s)
+{
+    time_t t = time(NULL);
+    struct tm *lt = localtime(&t);
+
+    const char *r = "%H:%M:%S, %d.%m.%Y";
+    strftime(s->time, sizeof(s->time), r, lt);
+}
+
 State *state_init()
 {
     State *s = malloc(sizeof(State));
@@ -150,6 +161,8 @@ State *state_init()
             printf("ERROR: initializing State\n");
             DEBUG_state(s);
         }
+
+        state_update_time(s);
     }
 
     return s;

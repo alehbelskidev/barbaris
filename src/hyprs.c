@@ -35,8 +35,9 @@ void hypr_read_sock(int fd, State *s,
                     void (*state_update_active_window)(State *, char[108]),
                     void (*state_update_active_workspace)(State *, int))
 {
-    size_t bufsize = 1024;
+    size_t bufsize = 4096;
     char buf[bufsize];
+
     int n = read(fd, buf, bufsize - 1);
     if (n > 0) {
         buf[n] = '\0';
@@ -47,19 +48,18 @@ void hypr_read_sock(int fd, State *s,
         while ((end = strchr(line, '\n')) != NULL) {
             *end = '\0';
 
-            // example
-            // activewindow>>Alacritty,nvim . ~/c/barbaris
             char event_t[64], arg[108];
-            int res_count = sscanf(line, "%[^>]>>%[^\n]", event_t, arg);
+
+            int res_count = sscanf(line, "%63[^>]>>%107[^\n]", event_t, arg);
+
             if (res_count != 2) {
-                printf("Hypr event parse error! Got args (required 2): %d\n",
-                       res_count);
+                line = end + 1;
+                continue;
             }
 
             if (strcmp(event_t, "activewindow") == 0) {
                 state_update_active_window(s, arg);
-            }
-            if (strcmp(event_t, "workspace") == 0) {
+            } else if (strcmp(event_t, "workspace") == 0) {
                 state_update_active_workspace(s, atoi(arg));
             }
 

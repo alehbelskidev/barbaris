@@ -2,7 +2,7 @@
 # Requires: cmake (GLFW), wayland-client, wayland-protocols, lua5.4
 
 CC      = gcc
-CFLAGS  = -std=c11 -Wall -Wextra -O2
+CFLAGS  = -std=c11 -Wall -Wextra -O0 -g -fsanitize=address
 CFLAGS += -Ivendor/raylib/src
 CFLAGS += -Ivendor/glfw/include
 CFLAGS += -Isrc
