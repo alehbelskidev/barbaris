@@ -4,6 +4,8 @@
 
 #include <stdbool.h>
 
+#include "config.h"
+
 typedef struct {
     int id;
     char name[128];
@@ -21,10 +23,10 @@ typedef struct {
 
 void DEBUG_state(State *s);
 
-State *state_init();
+State *state_init(Config *c);
 void state_update_active_window(State *s, char w[108]);
 void state_update_active_workspace(State *s, int id);
-void state_update_time(State *s);
+void state_update_time(Config *c, State *s);
 void state_free(State *s);
 
 #endif  // !STATE_H

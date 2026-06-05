@@ -230,6 +230,10 @@ void deserialize_window(Config *c, lua_State *L)
 
 void deserialize_clock(Config *c, lua_State *L)
 {
+    lua_getfield(L, -1, "clock_format");
+    c->clock_format = lua_tostring(L, -1);
+    lua_pop(L, 1);
+
     lua_getfield(L, -1, "clock");
 
     lua_getfield(L, -1, "gap");
@@ -292,11 +296,20 @@ Config *config_load()
 void config_load_font(Config *c)
 {
     if (c->fontpath != NULL) {
-        int codepoints[256 + 256];
+        int codepoints[20000];
         int count = 0;
 
+        // ASCII
         for (int i = 32; i < 127; i++) codepoints[count++] = i;
+        // Cyrillic
         for (int i = 0x400; i < 0x500; i++) codepoints[count++] = i;
+        // Nerd Fonts (1: PUA)
+        for (int i = 0xE000; i <= 0xE89F; i++) codepoints[count++] = i;
+        // (2: Font Awesome, Octicons, Material ...)
+        for (int i = 0xF000; i <= 0xF1AF0; i++) {
+            if (count >= 20000) break;
+            codepoints[count++] = i;
+        }
 
         c->font = LoadFontEx(c->fontpath, c->fontsize, codepoints, count);
         SetTextureFilter(c->font.texture, TEXTURE_FILTER_BILINEAR);

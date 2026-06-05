@@ -134,16 +134,15 @@ void state_update_active_workspace(State *s, int id)
     }
 }
 
-void state_update_time(State *s)
+void state_update_time(Config *c, State *s)
 {
     time_t t = time(NULL);
     struct tm *lt = localtime(&t);
 
-    const char *r = "%H:%M:%S, %d.%m.%Y";
-    strftime(s->time, sizeof(s->time), r, lt);
+    strftime(s->time, sizeof(s->time), c->clock_format, lt);
 }
 
-State *state_init()
+State *state_init(Config *c)
 {
     State *s = malloc(sizeof(State));
 
@@ -162,7 +161,7 @@ State *state_init()
             DEBUG_state(s);
         }
 
-        state_update_time(s);
+        state_update_time(c, s);
     }
 
     return s;

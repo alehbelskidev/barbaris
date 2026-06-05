@@ -51,7 +51,9 @@ Nothing is final here! Not sure about:
 
 ```lua
 return {
-	height = 40,
+	height = 32,
+	padding_x = 12,
+	padding_y = 12,
 
 	theme = {
 		bg = "#1e1e2e",
@@ -73,14 +75,22 @@ return {
 
 	workspaces = {
 		gap = 8,
-		padding_x = 8,
-		padding_y = 8;
+		padding_x = 4,
+		padding_y = 4,
+		roundness = 0.2,
 	},
 
 	window = {
 		gap = 16,
 		padding_x = 4,
-		padding_y = 4;
+		padding_y = 4,
+	},
+
+	clock_format = "CALENDAR %H:%M:%S, %d.%m.%Y CALENDAR LONG ICON",
+	clock = {
+		gap = 16,
+		padding_x = 4,
+		padding_y = 4,
 	},
 }
 ```
