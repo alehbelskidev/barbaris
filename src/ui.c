@@ -211,9 +211,10 @@ void draw_center(Context *ctx)
 
     for (int i = 0; i < center_count; i++) {
         Block *b = &center[i];
-        total_width += b->gap + b->container_size.x;
+        total_width += b->container_size.x + b->gap;
     }
-    float center_offset = (GetScreenWidth() / 2) - (total_width / 2);
+    float center_offset =
+        (GetScreenWidth() - ctx->c->padding_x * 2) / 2 - (total_width / 2);
 
     draw_module(ctx, center_offset, center, center_alphas, center_count);
 }
