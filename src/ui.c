@@ -8,13 +8,18 @@
 #define MAX_BLOCKS 30
 
 static Block left[MAX_BLOCKS];
+static float left_alphas[MAX_BLOCKS] = {0};
 static int left_count = 0;
 
 static Block center[MAX_BLOCKS];
+static float center_alphas[MAX_BLOCKS] = {0};
 static int center_count = 0;
 
 static Block right[MAX_BLOCKS];
+static float right_alphas[MAX_BLOCKS] = {0};
 static int right_count = 0;
+
+#define ANIM_SPEED 5.5f
 
 void DEBUG_block(Block* b)
 {
@@ -56,7 +61,7 @@ void DEBUG_block(Block* b)
     printf("    hover=%b\n", b->hover);
     printf("    roundness=%f\n", b->roundness);
     printf("    text=%s\n", b->text);
-    printf("    image=%b\n", b->image != NULL);
+    printf("    image=%d\n", b->image != NULL);
     printf("    image_size={x %f , y %f}\n", b->image_size.x, b->image_size.y);
     printf("\\--------------------------------------------\n");
 }
@@ -159,6 +164,7 @@ void ui_draw(Context* ctx)
 
     for (int i = 0; i < left_count; i++) {
         Block* b = &left[i];
+
         left_offset += b->gap;
         Vector2 pos = {left_offset,
                        ctx->c->height / 2 - b->container_size.y / 2};
@@ -171,8 +177,20 @@ void ui_draw(Context* ctx)
             pos.y + b->container_size.y / 2 - b->text_size.y / 2};
 
         Color textcolor = ctx->c->theme.fg;
+
         if (hovered && b->hover) {
-            DrawRectangleRounded(crect, b->roundness, 6, ctx->c->theme.fg);
+            left_alphas[i] += ANIM_SPEED * ctx->delta_time;
+        } else {
+            left_alphas[i] -= ANIM_SPEED * ctx->delta_time;
+        }
+        if (left_alphas[i] < 0) left_alphas[i] = 0;
+        if (left_alphas[i] > 1) left_alphas[i] = 1;
+
+        if (hovered && b->hover) {
+            Color fg = ctx->c->theme.fg;
+            fg.a = (unsigned char)(left_alphas[i] * 255);
+
+            DrawRectangleRounded(crect, b->roundness, 3, fg);
             textcolor = ctx->c->theme.bg;
         }
 

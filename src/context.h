@@ -9,6 +9,7 @@ typedef struct {
     Config* c;
     Vector2 mouse_pos;
     Vector2 mouse_delta;
+    float delta_time;
 } Context;
 
 Context* ctx_init(Config* c, State* s);

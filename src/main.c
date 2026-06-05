@@ -43,6 +43,7 @@ int main(void)
         ui_prep(ctx);
         ctx->mouse_pos = GetMousePosition();
         ctx->mouse_delta = GetMouseDelta();
+        ctx->delta_time = GetFrameTime();
         hypr_read_sock(fd, ctx->s, &state_update_active_window,
                        &state_update_active_workspace);
 

@@ -15,6 +15,7 @@ typedef struct {
     float gap;
 
     bool hover;
+
     float roundness;
 
     char* text;
