@@ -15,9 +15,9 @@
 int main(void)
 {
     int fd = hypr_connect_sock();
-    State* s = state_init();
-    Config* c = config_load();
-    Context* ctx = ctx_init(c, s);
+    State *s = state_init();
+    Config *c = config_load();
+    Context *ctx = ctx_init(c, s);
 
     SetConfigFlags(FLAG_WINDOW_UNDECORATED | FLAG_WINDOW_TRANSPARENT);
 
@@ -26,7 +26,7 @@ int main(void)
     InitWindow(BAR_WIDTH, c->height, "barbaris");
     config_load_font(c);
 
-    GLFWwindow* glfw_win = glfwGetCurrentContext();
+    GLFWwindow *glfw_win = glfwGetCurrentContext();
 
     glfwWindowHint(GLFW_WAYLAND_USE_ZWLR, GLFW_WAYLAND_ZWLR_LAYER_TOP);
     glfwWaylandZwlrSetLayer(glfw_win, GLFW_WAYLAND_ZWLR_LAYER_TOP);

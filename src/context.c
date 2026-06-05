@@ -2,9 +2,9 @@
 
 #include <stdlib.h>
 
-Context* ctx_init(Config* c, State* s)
+Context *ctx_init(Config *c, State *s)
 {
-    Context* ctx = malloc(sizeof(Context));
+    Context *ctx = malloc(sizeof(Context));
 
     if (ctx != NULL) {
         ctx->c = c;
@@ -14,7 +14,7 @@ Context* ctx_init(Config* c, State* s)
     return ctx;
 }
 
-void ctx_free(Context* ctx)
+void ctx_free(Context *ctx)
 {
     if (ctx == NULL) return;
 

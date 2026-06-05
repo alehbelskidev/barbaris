@@ -18,11 +18,11 @@ typedef struct {
     bool is_dirty;
 } State;
 
-void DEBUG_state(State* s);
+void DEBUG_state(State *s);
 
-State* state_init();
-void state_update_active_window(State* s, char w[108]);
-void state_update_active_workspace(State* s, int id);
-void state_free(State* s);
+State *state_init();
+void state_update_active_window(State *s, char w[108]);
+void state_update_active_workspace(State *s, int id);
+void state_free(State *s);
 
 #endif  // !STATE_H

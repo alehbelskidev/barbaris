@@ -20,3 +20,5 @@ AlignConsecutiveDeclarations: false
 
 AllowShortFunctionsOnASingleLine: None
 IndentCaseLabels: true
+
+PointerAlignment: Right

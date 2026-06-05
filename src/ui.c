@@ -21,9 +21,9 @@ static int right_count = 0;
 
 #define ANIM_SPEED 5.5f
 
-void DEBUG_block(Block* b)
+void DEBUG_block(Block *b)
 {
-    char mod[10];
+    char mod[15];
     switch (b->mod) {
         case MOD_WORKSPACES:
             strcpy(mod, "Workspaces");
@@ -66,12 +66,12 @@ void DEBUG_block(Block* b)
     printf("\\--------------------------------------------\n");
 }
 
-void prep_workspaces(Context* ctx, Block* blocks, int* counter)
+void prep_workspaces(Context *ctx, Block *blocks, int *counter)
 {
     float max_side = 0.0f;
 
     for (int i = 0; i < ctx->s->workspaces_count; i++) {
-        HyprWorkspace* ws = &ctx->s->workspaces[i];
+        HyprWorkspace *ws = &ctx->s->workspaces[i];
 
         Vector2 text_size =
             MeasureTextEx(ctx->c->font, ws->name, ctx->c->fontsize, 0);
@@ -89,7 +89,7 @@ void prep_workspaces(Context* ctx, Block* blocks, int* counter)
     }
 
     for (int i = 0; i < ctx->s->workspaces_count; i++) {
-        HyprWorkspace* ws = &ctx->s->workspaces[i];
+        HyprWorkspace *ws = &ctx->s->workspaces[i];
 
         Vector2 text_size =
             MeasureTextEx(ctx->c->font, ws->name, ctx->c->fontsize, 0);
@@ -105,13 +105,14 @@ void prep_workspaces(Context* ctx, Block* blocks, int* counter)
         block.hover = ctx->c->workspaces.hover;
         block.roundness = ctx->c->workspaces.roundness;
         block.mod = MOD_WORKSPACES;
+        block.workspace_id = ws->id;
 
         blocks[*counter] = block;
         (*counter)++;
     }
 }
 
-void prep_window(Context* ctx, Block* blocks, int* counter)
+void prep_window(Context *ctx, Block *blocks, int *counter)
 {
     Block block = {0};
     block.text = ctx->s->active_window;
@@ -132,8 +133,8 @@ void prep_window(Context* ctx, Block* blocks, int* counter)
     (*counter)++;
 }
 
-void prep_module(Context* ctx, Module* m, int count, Block* blocks,
-                 int* counter)
+void prep_module(Context *ctx, Module *m, int count, Block *blocks,
+                 int *counter)
 {
     for (int i = 0; i < count; i++) {
         if (m[i] == MOD_WORKSPACES) {
@@ -145,7 +146,7 @@ void prep_module(Context* ctx, Module* m, int count, Block* blocks,
     }
 }
 
-void ui_prep(Context* ctx)
+void ui_prep(Context *ctx)
 {
     if (ctx->s->is_dirty) {
         left_count = 0;
@@ -158,12 +159,12 @@ void ui_prep(Context* ctx)
     }
 }
 
-void ui_draw(Context* ctx)
+void ui_draw(Context *ctx)
 {
     float left_offset = ctx->c->padding_x;
 
     for (int i = 0; i < left_count; i++) {
-        Block* b = &left[i];
+        Block *b = &left[i];
 
         left_offset += b->gap;
         Vector2 pos = {left_offset,
@@ -192,10 +193,19 @@ void ui_draw(Context* ctx)
 
             DrawRectangleRounded(crect, b->roundness, 3, fg);
             textcolor = ctx->c->theme.bg;
+        } else if (b->workspace_id == ctx->s->active_workspace_id) {
+            DrawRectangleRounded(crect, b->roundness, 3, ctx->c->theme.fg);
+            textcolor = ctx->c->theme.bg;
         }
 
+        // printf("block ws id=%d == active ws id=%d\n", b->workspace_id,
+        //        ctx->s->active_workspace_id);
         if (b->text != NULL) {
-            DrawTextEx(ctx->c->font, b->text, text_pos, ctx->c->fontsize, 0,
+            Font *font = b->workspace_id == ctx->s->active_workspace_id
+                             ? &ctx->c->font_bold
+                             : &ctx->c->font;
+
+            DrawTextEx(*font, b->text, text_pos, ctx->c->fontsize, 0,
                        textcolor);
         }
 

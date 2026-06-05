@@ -8,6 +8,7 @@
 #include "raylib.h"
 
 typedef struct {
+    int workspace_id;
     Module mod;
 
     Vector2 container_size;
@@ -18,13 +19,13 @@ typedef struct {
 
     float roundness;
 
-    char* text;
+    char *text;
 
-    Texture* image;
+    Texture *image;
     Vector2 image_size;
 } Block;
 
-void ui_prep(Context* ctx);
-void ui_draw(Context* ctx);
+void ui_prep(Context *ctx);
+void ui_draw(Context *ctx);
 
 #endif  // !UI_H

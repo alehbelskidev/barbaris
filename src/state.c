@@ -7,7 +7,7 @@
 
 #include "hyprs.h"
 
-void DEBUG_state(State* s)
+void DEBUG_state(State *s)
 {
     printf("State* {\n");
     printf("  workspaces_count    = %d\n", s->workspaces_count);
@@ -19,15 +19,15 @@ void DEBUG_state(State* s)
 
 // Str will be cut to 256b
 // TODO: do I really need to resolve that?
-int parse_active_window(State* s)
+int parse_active_window(State *s)
 {
     int status = 0;
     char win[1024];
     hypr_request("j/activewindow", win, sizeof(win));
 
-    cJSON* win_json = cJSON_Parse(win);
+    cJSON *win_json = cJSON_Parse(win);
     if (win_json == NULL) {
-        const char* error_ptr = cJSON_GetErrorPtr();
+        const char *error_ptr = cJSON_GetErrorPtr();
         if (error_ptr != NULL) {
             fprintf(stderr, "ERROR: parse_active_window: %s\n", error_ptr);
         }
@@ -35,8 +35,8 @@ int parse_active_window(State* s)
         goto end;
     }
 
-    const cJSON* winclass = cJSON_GetObjectItem(win_json, "class");
-    const cJSON* wintitle = cJSON_GetObjectItem(win_json, "title");
+    const cJSON *winclass = cJSON_GetObjectItem(win_json, "class");
+    const cJSON *wintitle = cJSON_GetObjectItem(win_json, "title");
 
     if (cJSON_IsString(winclass) && (winclass->valuestring != NULL) &&
         cJSON_IsString(wintitle) && (wintitle->valuestring != NULL))
@@ -50,15 +50,15 @@ end:
     return status;
 }
 
-int parse_wokspaces(State* s)
+int parse_wokspaces(State *s)
 {
     int status = 0;
     char workspaces[2048];
     hypr_request("j/workspaces", workspaces, sizeof(workspaces));
 
-    cJSON* ws_json = cJSON_Parse(workspaces);
+    cJSON *ws_json = cJSON_Parse(workspaces);
     if (ws_json == NULL) {
-        const char* error_ptr = cJSON_GetErrorPtr();
+        const char *error_ptr = cJSON_GetErrorPtr();
         if (error_ptr != NULL) {
             fprintf(stderr, "ERROR: parse_workspace: %s\n", error_ptr);
         }
@@ -66,12 +66,12 @@ int parse_wokspaces(State* s)
         goto end;
     }
 
-    const cJSON* ws;
+    const cJSON *ws;
     int i = 0;
     cJSON_ArrayForEach(ws, ws_json)
     {
-        cJSON* id = cJSON_GetObjectItem(ws, "id");
-        cJSON* name = cJSON_GetObjectItem(ws, "name");
+        cJSON *id = cJSON_GetObjectItem(ws, "id");
+        cJSON *name = cJSON_GetObjectItem(ws, "name");
 
         if (cJSON_IsString(name) && (name->valuestring != NULL) &&
             cJSON_IsNumber(id))
@@ -89,15 +89,15 @@ end:
     return status;
 }
 
-int parse_active_workspace(State* s)
+int parse_active_workspace(State *s)
 {
     int status = 0;
     char ws[2048];
     hypr_request("j/activeworkspace", ws, sizeof(ws));
 
-    cJSON* ws_json = cJSON_Parse(ws);
+    cJSON *ws_json = cJSON_Parse(ws);
     if (ws_json == NULL) {
-        const char* error_ptr = cJSON_GetErrorPtr();
+        const char *error_ptr = cJSON_GetErrorPtr();
         if (error_ptr != NULL) {
             fprintf(stderr, "ERROR: parse_active_workspace: %s\n", error_ptr);
         }
@@ -105,7 +105,7 @@ int parse_active_workspace(State* s)
         goto end;
     }
 
-    cJSON* id = cJSON_GetObjectItem(ws_json, "id");
+    cJSON *id = cJSON_GetObjectItem(ws_json, "id");
     if (cJSON_IsNumber(id)) {
         s->active_workspace_id = id->valueint;
     }
@@ -115,7 +115,7 @@ end:
     return status;
 }
 
-void state_update_active_window(State* s, char w[108])
+void state_update_active_window(State *s, char w[108])
 {
     if (strcmp(s->active_window, w) != 0) {
         memcpy(s->active_window, w, sizeof(s->active_window) - 1);
@@ -124,7 +124,7 @@ void state_update_active_window(State* s, char w[108])
     }
 }
 
-void state_update_active_workspace(State* s, int id)
+void state_update_active_workspace(State *s, int id)
 {
     if (s->active_workspace_id != id) {
         s->active_workspace_id = id;
@@ -132,9 +132,9 @@ void state_update_active_workspace(State* s, int id)
     }
 }
 
-State* state_init()
+State *state_init()
 {
-    State* s = malloc(sizeof(State));
+    State *s = malloc(sizeof(State));
 
     if (s != NULL) {
         s->workspaces_count = 0;
@@ -155,7 +155,7 @@ State* state_init()
     return s;
 }
 
-void state_free(State* s)
+void state_free(State *s)
 {
     if (s != NULL) {
         free(s);

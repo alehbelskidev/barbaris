@@ -21,9 +21,9 @@ typedef struct {
 } Theme;
 
 typedef struct {
-    Module* left;
-    Module* center;
-    Module* right;
+    Module *left;
+    Module *center;
+    Module *right;
     int left_count;
     int center_count;
     int right_count;
@@ -44,18 +44,22 @@ typedef struct {
     int height;
     int padding_x;
     int padding_y;
+
     Theme theme;
     Font font;
-    char* fontpath;
+    Font font_bold;
+    char *fontpath;
+    char *fontpath_bold;
     int fontsize;
+
     Modules modules;
 
     Styles workspaces;
     Styles window;
 } Config;
 
-Config* config_load();
-void config_load_font(Config* c);
-void config_free(Config* c);
+Config *config_load();
+void config_load_font(Config *c);
+void config_free(Config *c);
 
 #endif  // !CONFIG_H
