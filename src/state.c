@@ -148,6 +148,17 @@ void state_create_workspace(State *s, int id)
 
 void state_destroy_workspace(State *s, int id)
 {
+    int write_idx = 0;
+
+    for (int i = 0; i < s->workspaces_count; i++) {
+        if (s->workspaces[i].id != id) {
+            s->workspaces[write_idx] = s->workspaces[i];
+            write_idx++;
+        }
+    }
+
+    s->workspaces_count = write_idx;
+    s->is_dirty = true;
 }
 
 void state_update_time(State *s, char *clock_format)

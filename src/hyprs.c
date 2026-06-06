@@ -34,7 +34,8 @@ int hypr_connect_sock()
 void hypr_read_sock(int fd, State *s,
                     void (*state_update_active_window)(State *, char[108]),
                     void (*state_update_active_workspace)(State *, int),
-                    void (*state_create_workspace)(State *, int))
+                    void (*state_create_workspace)(State *, int),
+                    void (*state_destroy_workspace)(State *, int))
 {
     size_t bufsize = 4096;
     char buf[bufsize];
@@ -65,6 +66,8 @@ void hypr_read_sock(int fd, State *s,
                 state_update_active_workspace(s, atoi(arg));
             } else if (strcmp(event_t, "createworkspace") == 0) {
                 state_create_workspace(s, atoi(arg));
+            } else if (strcmp(event_t, "destroyworkspace") == 0) {
+                state_destroy_workspace(s, atoi(arg));
             }
 
             line = end + 1;
