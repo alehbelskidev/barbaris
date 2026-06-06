@@ -42,8 +42,6 @@ typedef struct {
 
 typedef struct {
     int height;
-    int padding_x;
-    int padding_y;
 
     Theme theme;
     Font font;
@@ -54,10 +52,11 @@ typedef struct {
 
     Modules modules;
 
+    Styles bar;
     Styles workspaces;
     Styles window;
     Styles clock;
-    char *clock_format;
+    char clock_format[64];
 } Config;
 
 Config *config_load();

@@ -7,12 +7,11 @@ CFLAGS += -Ivendor/raylib/src
 CFLAGS += -Ivendor/glfw/include
 CFLAGS += -Isrc
 
-# Wayland + Lua
-CFLAGS += $(shell pkg-config --cflags wayland-client lua5.4)
-LDLIBS  = $(shell pkg-config --libs wayland-client lua5.4)
-LDLIBS += -lGL -lm -lpthread -ldl -lrt -lfontconfig -lcjson
+CFLAGS += $(shell pkg-config --cflags wayland-client)
+LDLIBS  = $(shell pkg-config --libs wayland-client)
+LDLIBS += -lGL -lm -lpthread -ldl -lrt -lfontconfig -lcjson -ltomlc17
 
-# Libs
+# Vendor
 LDLIBS += vendor/raylib/src/libraylib.a
 LDLIBS += vendor/glfw/build/src/libglfw3.a
 

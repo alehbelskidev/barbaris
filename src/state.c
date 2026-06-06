@@ -7,17 +7,8 @@
 #include <string.h>
 #include <time.h>
 
+#include "__debug.h"
 #include "hyprs.h"
-
-void DEBUG_state(State *s)
-{
-    printf("State* {\n");
-    printf("  workspaces_count    = %d\n", s->workspaces_count);
-    printf("  active_workspace_id = %d\n", s->active_workspace_id);
-    printf("  active_window[108]  = %s\n", s->active_window);
-    printf("  is_dirty            = %b\n", s->is_dirty);
-    printf("}\n");
-}
 
 // Str will be cut to 256b
 // TODO: do I really need to resolve that?
@@ -134,15 +125,15 @@ void state_update_active_workspace(State *s, int id)
     }
 }
 
-void state_update_time(Config *c, State *s)
+void state_update_time(State *s, char *clock_format)
 {
     time_t t = time(NULL);
     struct tm *lt = localtime(&t);
 
-    strftime(s->time, sizeof(s->time), c->clock_format, lt);
+    strftime(s->time, sizeof(s->time), clock_format, lt);
 }
 
-State *state_init(Config *c)
+State *state_init(char *clock_format)
 {
     State *s = malloc(sizeof(State));
 
@@ -161,7 +152,7 @@ State *state_init(Config *c)
             DEBUG_state(s);
         }
 
-        state_update_time(c, s);
+        state_update_time(s, clock_format);
     }
 
     return s;

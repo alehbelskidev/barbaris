@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "__debug.h"
+
 #define MAX_BLOCKS 30
 
 static Block left[MAX_BLOCKS];
@@ -142,6 +144,9 @@ void ui_prep(Context *ctx)
                     right, &right_count);
 
         ctx->s->is_dirty = false;
+
+        DEBUG_config(ctx->c);
+        DEBUG_state(ctx->s);
     }
 }
 
@@ -201,7 +206,7 @@ void draw_module(Context *ctx, float start_offset, Block *blocks, float *alphas,
 
 void draw_left(Context *ctx)
 {
-    float left_offset = ctx->c->padding_x;
+    float left_offset = ctx->c->bar.padding_x;
     draw_module(ctx, left_offset, left, left_alphas, left_count);
 }
 
@@ -214,7 +219,7 @@ void draw_center(Context *ctx)
         total_width += b->container_size.x + b->gap;
     }
     float center_offset =
-        (GetScreenWidth() - ctx->c->padding_x * 2) / 2 - (total_width / 2);
+        (GetScreenWidth() - ctx->c->bar.padding_x * 2) / 2 - (total_width / 2);
 
     draw_module(ctx, center_offset, center, center_alphas, center_count);
 }

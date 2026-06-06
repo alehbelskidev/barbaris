@@ -17,7 +17,7 @@ int main(void)
 {
     int fd = hypr_connect_sock();
     Config *c = config_load();
-    State *s = state_init(c);
+    State *s = state_init(c->clock_format);
     Context *ctx = ctx_init(c, s);
 
     SetConfigFlags(FLAG_WINDOW_UNDECORATED | FLAG_WINDOW_TRANSPARENT);
@@ -47,7 +47,7 @@ int main(void)
         ctx->delta_time = GetFrameTime();
         hypr_read_sock(fd, ctx->s, &state_update_active_window,
                        &state_update_active_workspace);
-        state_update_time(c, s);
+        state_update_time(s, c->clock_format);
 
         BeginDrawing();
         ClearBackground(c->theme.bg);

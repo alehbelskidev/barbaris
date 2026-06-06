@@ -21,12 +21,10 @@ typedef struct {
     char time[128];
 } State;
 
-void DEBUG_state(State *s);
-
-State *state_init(Config *c);
+State *state_init(char *clock_format);
 void state_update_active_window(State *s, char w[108]);
 void state_update_active_workspace(State *s, int id);
-void state_update_time(Config *c, State *s);
+void state_update_time(State *s, char *clock_format);
 void state_free(State *s);
 
 #endif  // !STATE_H

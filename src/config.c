@@ -2,14 +2,20 @@
 
 #include "config.h"
 
+#include <errno.h>
 #include <fontconfig/fontconfig.h>
-#include <lauxlib.h>
-#include <lua.h>
-#include <lualib.h>
+#include <inttypes.h>
 #include <raylib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <tomlc17.h>
+
+static void error(const char *msg, const char *msg1)
+{
+    fprintf(stderr, "ERROR: %s%s\n", msg, msg1 ? msg1 : "");
+    exit(1);
+}
 
 Module str_to_module(const char *modstr)
 {
@@ -27,54 +33,73 @@ Module str_to_module(const char *modstr)
 
 void set_config_path(char *path, size_t size)
 {
-    const char *configdir = "/.config/barbaris/config.lua";
+    const char *configdir = "/.config/barbaris/config.toml";
     const char *homedir = getenv("HOME");
     snprintf(path, size, "%s%s", homedir, configdir);
 }
 
-void deserialize_config_root(Config *c, lua_State *L)
+void deserialize_style(Styles *s, toml_result_t *r, const char *key)
 {
-    int height, padding_x, padding_y;
+    char buf[64];
+    toml_datum_t d;
 
-    lua_getfield(L, -1, "height");
-    height = lua_tointeger(L, -1);
-    lua_pop(L, 1);
+    sprintf(buf, "%s.gap", key);
+    d = toml_seek(r->toptab, buf);
+    if (d.type == TOML_INT64) s->gap = d.u.int64;
 
-    lua_getfield(L, -1, "padding_x");
-    padding_x = lua_tointeger(L, -1);
-    lua_pop(L, 1);
+    sprintf(buf, "%s.padding.x", key);
+    d = toml_seek(r->toptab, buf);
+    if (d.type == TOML_INT64) s->padding_x = d.u.int64;
 
-    lua_getfield(L, -1, "padding_y");
-    padding_y = lua_tointeger(L, -1);
-    lua_pop(L, 1);
+    sprintf(buf, "%s.padding.y", key);
+    d = toml_seek(r->toptab, buf);
+    if (d.type == TOML_INT64) s->padding_y = d.u.int64;
 
-    c->padding_x = padding_x;
-    c->padding_y = padding_y;
-    c->height = height + padding_y;
+    sprintf(buf, "%s.roundness", key);
+    d = toml_seek(r->toptab, buf);
+    if (d.type == TOML_FP64) s->roundness = d.u.fp64;
+
+    sprintf(buf, "%s.hover", key);
+    d = toml_seek(r->toptab, buf);
+    if (d.type == TOML_BOOLEAN) s->hover = d.u.boolean;
 }
 
-void deserialize_color(lua_State *L, Color *color, char *key)
+void deserialize_config_root(Config *c, toml_result_t *r)
 {
-    lua_getfield(L, -1, key);
+    int height;
+    toml_datum_t d = toml_seek(r->toptab, "height");
+    if (d.type == TOML_INT64) height = d.u.int64;
 
-    const char *hexstr = lua_tostring(L, -1);
-    int r, g, b;
-    sscanf(hexstr + 1, "%02x%02x%02x", &r, &g, &b);
-    color->r = r;
-    color->g = g;
-    color->b = b;
+    deserialize_style(&c->bar, r, "bar");
+
+    c->height = height + c->bar.padding_y;
+}
+
+void deserialize_color(toml_result_t *r, Color *color, const char *key)
+{
+    char buf[64];
+    toml_datum_t d;
+    int red = 0, green = 0, blue = 0;
+    char hexstr[8];
+
+    sprintf(buf, "theme.%s", key);
+    d = toml_seek(r->toptab, buf);
+    if (d.type == TOML_STRING) {
+        strncpy(hexstr, d.u.s, sizeof(hexstr));
+        sscanf(hexstr + 1, "%02x%02x%02x", &red, &green, &blue);
+    }
+
+    color->r = red;
+    color->g = green;
+    color->b = blue;
     color->a = 255;
-
-    lua_pop(L, 1);
 }
 
-void deserialize_theme(Config *c, lua_State *L)
+void deserialize_theme(Config *c, toml_result_t *r)
 {
-    lua_getfield(L, -1, "theme");
-    deserialize_color(L, &c->theme.fg, "fg");
-    deserialize_color(L, &c->theme.bg, "bg");
-    deserialize_color(L, &c->theme.accent, "accent");
-    lua_pop(L, 1);
+    deserialize_color(r, &c->theme.fg, "fg");
+    deserialize_color(r, &c->theme.bg, "bg");
+    deserialize_color(r, &c->theme.accent, "accent");
 }
 
 char *get_font_path(const char *family, const char *style)
@@ -105,26 +130,19 @@ char *get_font_path(const char *family, const char *style)
     return fontpath;
 }
 
-void deserialize_font(Config *c, lua_State *L)
+void deserialize_font(Config *c, toml_result_t *r)
 {
-    const char *family, *style;
+    char family[128];
+    toml_datum_t d;
 
-    lua_getfield(L, -1, "font");
-    lua_getfield(L, -1, "family");
-    family = lua_tostring(L, -1);
-    lua_pop(L, 1);
-    lua_getfield(L, -1, "size");
-    c->fontsize = lua_tointeger(L, -1);
-    lua_pop(L, 1);
-    lua_getfield(L, -1, "style");
-    style = lua_tostring(L, -1);
-    lua_pop(L, 1);
-    lua_pop(L, 1);
+    d = toml_seek(r->toptab, "font.size");
+    c->fontsize = d.type == TOML_INT64 ? d.u.int64 : 14;
 
-    // TODO: add to config instead of hardcode,
-    // not all fonts have that style
-    // very few have.
-    c->fontpath = get_font_path(family, style);
+    d = toml_seek(r->toptab, "font.family");
+    const char *fam = d.type == TOML_STRING ? d.u.s : "monospace";
+    strncpy(family, fam, sizeof(family));
+
+    c->fontpath = get_font_path(family, "Regular");
     c->fontpath_bold = get_font_path(family, "ExtraBold");
 }
 
@@ -133,33 +151,32 @@ typedef struct {
     int count;
 } DeserializeModRes;
 
-DeserializeModRes deserialize_module(lua_State *L, char *key)
+DeserializeModRes deserialize_module(toml_result_t *r, char *key)
 {
-    lua_getfield(L, -1, key);
-    int len = lua_rawlen(L, -1);
-    Module *mods = calloc(len, sizeof(Module));
+    char buf[64];
+    sprintf(buf, "modules.%s", key);
 
-    if (mods != NULL) {
-        for (int i = 1; i <= len; i++) {
-            lua_rawgeti(L, -1, i);
-            const char *val = lua_tostring(L, -1);
-            mods[i - 1] = str_to_module(val);
-            lua_pop(L, 1);
+    toml_datum_t d = toml_seek(r->toptab, buf);
+    if (d.type != TOML_ARRAY) return (DeserializeModRes){NULL, 0};
+
+    Module *mods = calloc(d.u.arr.size, sizeof(Module));
+    if (mods == NULL) return (DeserializeModRes){NULL, 0};
+
+    for (int i = 0; i < d.u.arr.size; i++) {
+        toml_datum_t elm = d.u.arr.elem[i];
+        if (elm.type == TOML_STRING) {
+            mods[i] = str_to_module(elm.u.s);
         }
     }
 
-    lua_pop(L, 1);
-
-    return (DeserializeModRes){mods, len};
+    return (DeserializeModRes){mods, d.u.arr.size};
 }
 
-void deserialize_modules(Config *c, lua_State *L)
+void deserialize_modules(Config *c, toml_result_t *r)
 {
-    lua_getfield(L, -1, "modules");
-
-    DeserializeModRes left = deserialize_module(L, "left");
-    DeserializeModRes center = deserialize_module(L, "center");
-    DeserializeModRes right = deserialize_module(L, "right");
+    DeserializeModRes left = deserialize_module(r, "left");
+    DeserializeModRes center = deserialize_module(r, "center");
+    DeserializeModRes right = deserialize_module(r, "right");
 
     c->modules.left = left.mod;
     c->modules.center = center.mod;
@@ -168,106 +185,36 @@ void deserialize_modules(Config *c, lua_State *L)
     c->modules.left_count = left.count;
     c->modules.center_count = center.count;
     c->modules.right_count = right.count;
-
-    lua_pop(L, 1);
 }
 
-// TODO: Merge OR extrac common logic from wss and window
-
-void deserialize_workspaces(Config *c, lua_State *L)
+void deserialize_workspaces(Config *c, toml_result_t *r)
 {
-    lua_getfield(L, -1, "workspaces");
-
-    lua_getfield(L, -1, "gap");
-    c->workspaces.gap = lua_tointeger(L, -1);
-    lua_pop(L, 1);
-
-    lua_getfield(L, -1, "padding_x");
-    c->workspaces.padding_x = lua_tointeger(L, -1);
-    lua_pop(L, 1);
-
-    lua_getfield(L, -1, "padding_y");
-    c->workspaces.padding_y = lua_tointeger(L, -1);
-    lua_pop(L, 1);
-
-    lua_getfield(L, -1, "roundness");
-    c->workspaces.roundness = (float)lua_tonumber(L, -1);
-    lua_pop(L, 1);
-
-    lua_getfield(L, -1, "hover");
-    c->workspaces.hover = lua_isnil(L, -1) ? true : lua_toboolean(L, -1);
-    lua_pop(L, 1);
-
-    lua_pop(L, 1);
+    deserialize_style(&c->workspaces, r, "workspaces");
 }
 
-void deserialize_window(Config *c, lua_State *L)
+void deserialize_window(Config *c, toml_result_t *r)
 {
-    lua_getfield(L, -1, "window");
-
-    lua_getfield(L, -1, "gap");
-    c->window.gap = lua_tointeger(L, -1);
-    lua_pop(L, 1);
-
-    lua_getfield(L, -1, "padding_x");
-    c->window.padding_x = lua_tointeger(L, -1);
-    lua_pop(L, 1);
-
-    lua_getfield(L, -1, "padding_y");
-    c->window.padding_y = lua_tointeger(L, -1);
-    lua_pop(L, 1);
-
-    lua_getfield(L, -1, "roundness");
-    c->window.roundness = (float)lua_tonumber(L, -1);
-    lua_pop(L, 1);
-
-    lua_getfield(L, -1, "hover");
-    c->window.hover = lua_isnil(L, -1) ? true : lua_toboolean(L, -1);
-    lua_pop(L, 1);
-
-    lua_pop(L, 1);
+    deserialize_style(&c->window, r, "window");
 }
 
-void deserialize_clock(Config *c, lua_State *L)
+void deserialize_clock(Config *c, toml_result_t *r)
 {
-    lua_getfield(L, -1, "clock_format");
-    c->clock_format = lua_tostring(L, -1);
-    lua_pop(L, 1);
-
-    lua_getfield(L, -1, "clock");
-
-    lua_getfield(L, -1, "gap");
-    c->clock.gap = lua_tointeger(L, -1);
-    lua_pop(L, 1);
-
-    lua_getfield(L, -1, "padding_x");
-    c->clock.padding_x = lua_tointeger(L, -1);
-    lua_pop(L, 1);
-
-    lua_getfield(L, -1, "padding_y");
-    c->clock.padding_y = lua_tointeger(L, -1);
-    lua_pop(L, 1);
-
-    lua_getfield(L, -1, "roundness");
-    c->clock.roundness = (float)lua_tonumber(L, -1);
-    lua_pop(L, 1);
-
-    lua_getfield(L, -1, "hover");
-    c->clock.hover = lua_isnil(L, -1) ? true : lua_toboolean(L, -1);
-    lua_pop(L, 1);
-
-    lua_pop(L, 1);
+    toml_datum_t d = toml_seek(r->toptab, "clock.format");
+    const char *fmt = d.type == TOML_STRING ? d.u.s : "%H:%M:%S, %d.%m.%Y";
+    strncpy(c->clock_format, fmt, sizeof(c->clock_format) - 1);
+    c->clock_format[sizeof(c->clock_format) - 1] = '\0';
+    deserialize_style(&c->clock, r, "clock");
 }
 
-void deserialize_config(Config *c, lua_State *L)
+void deserialize_config(Config *c, toml_result_t *r)
 {
-    deserialize_config_root(c, L);
-    deserialize_theme(c, L);
-    deserialize_font(c, L);
-    deserialize_modules(c, L);
-    deserialize_workspaces(c, L);
-    deserialize_window(c, L);
-    deserialize_clock(c, L);
+    deserialize_config_root(c, r);
+    deserialize_theme(c, r);
+    deserialize_font(c, r);
+    deserialize_modules(c, r);
+    deserialize_workspaces(c, r);
+    deserialize_window(c, r);
+    deserialize_clock(c, r);
 }
 
 Config *config_load()
@@ -276,18 +223,11 @@ Config *config_load()
     if (c != NULL) {
         char config_path[512];
         set_config_path(config_path, sizeof(config_path));
-        printf("path=%s\n", config_path);
 
-        lua_State *L = luaL_newstate();
-        luaL_openlibs(L);
-        if (luaL_dofile(L, config_path) != LUA_OK) {
-            fprintf(stderr, "config error: %s\n", lua_tostring(L, -1));
-        }
-        if (!lua_istable(L, -1)) {
-            fprintf(stderr, "config error: root is not a table\n");
-        }
-        deserialize_config(c, L);
-        lua_close(L);
+        toml_result_t result = toml_parse_file_ex(config_path);
+        if (!result.ok) error(result.errmsg, 0);
+        deserialize_config(c, &result);
+        toml_free(result);
     }
 
     return c;
@@ -314,11 +254,13 @@ void config_load_font(Config *c)
         c->font = LoadFontEx(c->fontpath, c->fontsize, codepoints, count);
         SetTextureFilter(c->font.texture, TEXTURE_FILTER_BILINEAR);
         free(c->fontpath);
+        c->fontpath = NULL;
 
         c->font_bold =
             LoadFontEx(c->fontpath_bold, c->fontsize, codepoints, count);
         SetTextureFilter(c->font_bold.texture, TEXTURE_FILTER_BILINEAR);
         free(c->fontpath_bold);
+        c->fontpath_bold = NULL;
     }
 }
 
