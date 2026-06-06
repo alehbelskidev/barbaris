@@ -1,16 +1,17 @@
 # barbaris - hyprland bar
 
-Wayland status bar for Hyprland. Built with Raylib + C, configured in Lua.
+Wayland status bar for Hyprland. Built with Raylib + C, configured in Toml.
 
 ## Dependencies
 
 ```
-gcc cmake make wayland wayland-protocols lua5.4 xkbcommon
+gcc cmake make wayland wayland-protocols xkbcommon
 ```
 
 On Arch:
 ```bash
-pacman -S gcc cmake make wayland wayland-protocols lua54 libxkbcommon
+pacman -S gcc cmake make wayland wayland-protocols libxkbcommon
+[aur] -S tomlc17
 ```
 
 ## Build
@@ -40,14 +41,14 @@ There are exactly two `glfwCreateWindow` calls in that file __patch both__.
 
 ## Config
 
-`config.lua` in the same directory as the binary, or `~/.config/barbaris/config.lua`.
+`config.toml` in the same directory as the binary, or `~/.config/barbaris/config.toml`.
 
 
 ## ps
 
 Nothing is final here! Not sure about:
 - Manual patches vs fork or smth else.
-- Lua as config language.
+- Toml as config language.
 
 ```toml
 height = 28
