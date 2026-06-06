@@ -49,48 +49,39 @@ Nothing is final here! Not sure about:
 - Manual patches vs fork or smth else.
 - Lua as config language.
 
-```lua
-return {
-	height = 32,
-	padding_x = 12,
-	padding_y = 12,
+```toml
+height = 28
 
-	theme = {
-		bg = "#1e1e2e",
-		fg = "#cdd6f4",
-		accent = "#89b4fa",
-	},
+[bar]
+padding = {x = 12, y = 4}
 
-	font = {
-		family = "Iosevka Nerd Font",
-		size = 20,
-		style = "Regular",
-	},
+[theme]
+bg = "#1e1e2e"
+fg = "#cdd6f4"
+accent = "#89b4fa"
 
-	modules = {
-		left = { "workspaces", "window" },
-		center = { "clock" },
-		right = { "volume", "disk" },
-	},
+[font]
+family = "Iosevka Nerd Font"
+size = 20
 
-	workspaces = {
-		gap = 8,
-		padding_x = 4,
-		padding_y = 4,
-		roundness = 0.2,
-	},
+[modules]
+left = [ "workspaces", "window"  ]
+center = [ "clock", ]
+right = [ "volume", "disk" ]
 
-	window = {
-		gap = 16,
-		padding_x = 4,
-		padding_y = 4,
-	},
+[workspaces]
+gap = 4
+padding = {x = 4, y = 4}
+roundness = 0.2
 
-	clock_format = "CALENDAR %H:%M:%S, %d.%m.%Y CALENDAR LONG ICON",
-	clock = {
-		gap = 16,
-		padding_x = 4,
-		padding_y = 4,
-	},
-}
+[window]
+gap = 8
+padding = {x = 4, y = 4}
+roundness = 0.2
+
+[clock]
+format = " %H:%M:%S, %d.%m.%Y"
+gap = 8
+padding = {x = 4, y = 4}
+roundness = 0.2
 ```
