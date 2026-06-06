@@ -2,6 +2,7 @@
 
 #include <cjson/cJSON.h>
 #include <locale.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -123,6 +124,30 @@ void state_update_active_workspace(State *s, int id)
         s->active_workspace_id = id;
         s->is_dirty = true;
     }
+}
+
+void state_create_workspace(State *s, int id)
+{
+    char name[128];
+    snprintf(name, sizeof(name), "%d", id);
+    HyprWorkspace new_ws = {id, ""};
+    strncpy(new_ws.name, name, sizeof(new_ws.name) - 1);
+
+    int i = s->workspaces_count - 1;
+
+    while (i >= 0 && s->workspaces[i].id > id) {
+        s->workspaces[i + 1] = s->workspaces[i];
+        i--;
+    }
+
+    s->workspaces[i + 1] = new_ws;
+
+    s->workspaces_count++;
+    s->is_dirty = true;
+}
+
+void state_destroy_workspace(State *s, int id)
+{
 }
 
 void state_update_time(State *s, char *clock_format)

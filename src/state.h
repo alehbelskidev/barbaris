@@ -24,6 +24,8 @@ typedef struct {
 State *state_init(char *clock_format);
 void state_update_active_window(State *s, char w[108]);
 void state_update_active_workspace(State *s, int id);
+void state_create_workspace(State *s, int id);
+void state_destroy_workspace(State *s, int id);
 void state_update_time(State *s, char *clock_format);
 void state_free(State *s);
 

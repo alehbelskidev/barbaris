@@ -46,7 +46,7 @@ int main(void)
         ctx->mouse_delta = GetMouseDelta();
         ctx->delta_time = GetFrameTime();
         hypr_read_sock(fd, ctx->s, &state_update_active_window,
-                       &state_update_active_workspace);
+                       &state_update_active_workspace, &state_create_workspace);
         state_update_time(s, c->clock_format);
 
         BeginDrawing();
