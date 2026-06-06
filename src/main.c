@@ -12,10 +12,12 @@
 #include "raylib.h"
 #include "state.h"
 #include "ui.h"
+#include "wifi.h"
 
 int main(void)
 {
     int fd = hypr_connect_sock();
+    WifiContext *wifi = wifi_connect("wlan0");
     Config *c = config_load();
     State *s = state_init(c->clock_format);
     Context *ctx = ctx_init(c, s);
@@ -50,6 +52,7 @@ int main(void)
                        &state_update_active_workspace, &state_create_workspace,
                        &state_destroy_workspace);
         state_update_time(s, c->clock_format);
+        wifi_read_sock(wifi, s, &state_update_wifi);
 
         BeginDrawing();
         ClearBackground(c->theme.bg);
@@ -57,6 +60,7 @@ int main(void)
         EndDrawing();
     }
 
+    wifi_close(wifi);
     state_free(s);
     config_free(c);
     ctx_free(ctx);

@@ -7,12 +7,23 @@ typedef enum {
     MOD_WORKSPACES,
     MOD_WINDOW,
     MOD_CLOCK,
+    MOD_WIFI,
     MOD_VOLUME,
-    MOD_MIC,
-    MOD_DISK,
+    MOD_DISKS,
+    MOD_PROC,
     MOD_RAM,
+    MOD_SYSTEM,
     MOD_EMPTY,
 } Module;
+
+typedef enum {
+    WSIGNAL_ERR,
+    WSIGNAL_0,
+    WSIGNAL_25,
+    WSIGNAL_50,
+    WSIGNAL_75,
+    WSIGNAL_100
+} WSignal;
 
 typedef struct {
     Color bg;
@@ -56,7 +67,10 @@ typedef struct {
     Styles workspaces;
     Styles window;
     Styles clock;
+    Styles wifi;
+
     char clock_format[64];
+    char wifi_levels[6][8];
 } Config;
 
 Config *config_load();

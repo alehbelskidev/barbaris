@@ -19,10 +19,11 @@ typedef struct {
 
     float roundness;
 
-    char *text;
+    char text[108];
 
     Texture *image;
     Vector2 image_size;
+
 } Block;
 
 void ui_prep(Context *ctx);

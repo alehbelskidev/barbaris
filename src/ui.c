@@ -7,8 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "__debug.h"
-
 #define MAX_BLOCKS 30
 
 static Block left[MAX_BLOCKS];
@@ -54,7 +52,8 @@ void prep_workspaces(Context *ctx, Block *blocks, int *counter)
             MeasureTextEx(ctx->c->font, ws->name, ctx->c->fontsize, 0);
 
         Block block = {0};
-        block.text = ws->name;
+        strncpy(block.text, ws->name, sizeof(block.text));
+        block.text[sizeof(block.text) - 1] = '\0';
 
         block.container_size.x = max_side;
         block.container_size.y = max_side;
@@ -74,7 +73,8 @@ void prep_workspaces(Context *ctx, Block *blocks, int *counter)
 void prep_window(Context *ctx, Block *blocks, int *counter)
 {
     Block block = {0};
-    block.text = ctx->s->active_window;
+    strncpy(block.text, ctx->s->active_window, sizeof(block.text));
+    block.text[sizeof(block.text) - 1] = '\0';
 
     Vector2 text_size =
         MeasureTextEx(ctx->c->font, block.text, ctx->c->fontsize, 0);
@@ -95,7 +95,8 @@ void prep_window(Context *ctx, Block *blocks, int *counter)
 void prep_clock(Context *ctx, Block *blocks, int *counter)
 {
     Block block = {0};
-    block.text = ctx->s->time;
+    strncpy(block.text, ctx->s->time, sizeof(block.text));
+    block.text[sizeof(block.text) - 1] = '\0';
 
     Vector2 text_size =
         MeasureTextEx(ctx->c->font, block.text, ctx->c->fontsize, 0);
@@ -113,18 +114,73 @@ void prep_clock(Context *ctx, Block *blocks, int *counter)
     (*counter)++;
 }
 
+void format_wifi_state(char *dest, size_t dest_size, const char *essid,
+                       int signal_dbm, char wifi_levels[6][8])
+{
+    const char *icon;
+
+    if (!dest || dest_size == 0) {
+        return;
+    }
+
+    if (!essid) {
+        essid = "No Link";
+    }
+
+    if (signal_dbm <= -100 || strcmp(essid, "Disconnected") == 0 ||
+        strcmp(essid, "No Link") == 0 || strlen(essid) == 0)
+    {
+        icon = "󰤭";
+        snprintf(dest, dest_size, "%s %s", icon, "Disconnected");
+        return;
+    }
+
+    int index = 0;
+    if (signal_dbm >= -85) index = 1;
+    if (signal_dbm >= -75) index = 2;
+    if (signal_dbm >= -65) index = 3;
+    if (signal_dbm >= -55) index = 4;
+    if (signal_dbm >= -45) index = 5;
+
+    snprintf(dest, dest_size, "%s %s", icon, essid);
+}
+
+void prep_wifi(Context *ctx, Block *blocks, int *counter)
+{
+    Block block = {0};
+
+    format_wifi_state(block.text, sizeof(block.text), ctx->s->essid,
+                      ctx->s->signal_dbm, ctx->c->wifi_levels);
+
+    Vector2 text_size =
+        MeasureTextEx(ctx->c->font, block.text, ctx->c->fontsize, 0);
+
+    Vector2 container_size = {text_size.x + ctx->c->wifi.padding_x,
+                              text_size.y + ctx->c->wifi.padding_y};
+
+    block.container_size = container_size;
+    block.text_size = text_size;
+    block.gap = ctx->c->wifi.gap;
+    block.hover = ctx->c->wifi.hover;
+    block.roundness = ctx->c->wifi.roundness;
+    block.mod = MOD_WIFI;
+
+    blocks[*counter] = block;
+    (*counter)++;
+}
+
 void prep_module(Context *ctx, Module *m, int count, Block *blocks,
                  int *counter)
 {
     for (int i = 0; i < count; i++) {
         if (m[i] == MOD_WORKSPACES) {
             prep_workspaces(ctx, blocks, counter);
-        }
-        if (m[i] == MOD_WINDOW) {
+        } else if (m[i] == MOD_WINDOW) {
             prep_window(ctx, blocks, counter);
-        }
-        if (m[i] == MOD_CLOCK) {
+        } else if (m[i] == MOD_CLOCK) {
             prep_clock(ctx, blocks, counter);
+        } else if (m[i] == MOD_WIFI) {
+            prep_wifi(ctx, blocks, counter);
         }
     }
 }
@@ -144,9 +200,6 @@ void ui_prep(Context *ctx)
                     right, &right_count);
 
         ctx->s->is_dirty = false;
-
-        DEBUG_config(ctx->c);
-        DEBUG_state(ctx->s);
     }
 }
 
@@ -199,7 +252,7 @@ void draw_module(Context *ctx, float start_offset, Block *blocks, float *alphas,
             textcolor = ctx->c->theme.bg;
         }
 
-        if (b->text != NULL) {
+        if (b->text[0] != '\0') {
             Font *font = b->workspace_id == ctx->s->active_workspace_id
                              ? &ctx->c->font_bold
                              : &ctx->c->font;
@@ -214,8 +267,8 @@ void draw_module(Context *ctx, float start_offset, Block *blocks, float *alphas,
 
 void draw_left(Context *ctx, void (*hypr_dispatch)(const char *))
 {
-    float left_offset = ctx->c->bar.padding_x;
-    draw_module(ctx, left_offset, left, left_alphas, left_count, hypr_dispatch);
+    float offset = ctx->c->bar.padding_x;
+    draw_module(ctx, offset, left, left_alphas, left_count, hypr_dispatch);
 }
 
 void draw_center(Context *ctx, void (*hypr_dispatch)(const char *))
@@ -226,15 +279,29 @@ void draw_center(Context *ctx, void (*hypr_dispatch)(const char *))
         Block *b = &center[i];
         total_width += b->container_size.x + b->gap;
     }
-    float center_offset =
+    float offset =
         (GetScreenWidth() - ctx->c->bar.padding_x * 2) / 2 - (total_width / 2);
 
-    draw_module(ctx, center_offset, center, center_alphas, center_count,
+    draw_module(ctx, offset, center, center_alphas, center_count,
                 hypr_dispatch);
+}
+
+void draw_right(Context *ctx, void (*hypr_dispatch)(const char *))
+{
+    float total_width = 0;
+
+    for (int i = 0; i < right_count; i++) {
+        Block *b = &right[i];
+        total_width += b->container_size.x + b->gap;
+    }
+    float offset = GetScreenWidth() - ctx->c->bar.padding_x - total_width;
+
+    draw_module(ctx, offset, right, right_alphas, right_count, hypr_dispatch);
 }
 
 void ui_draw(Context *ctx, void (*hypr_dispatch)(const char *))
 {
     draw_left(ctx, hypr_dispatch);
     draw_center(ctx, hypr_dispatch);
+    draw_right(ctx, hypr_dispatch);
 }

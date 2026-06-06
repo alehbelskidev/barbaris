@@ -22,10 +22,12 @@ Module str_to_module(const char *modstr)
     if (strcmp(modstr, "workspaces") == 0) return MOD_WORKSPACES;
     if (strcmp(modstr, "window") == 0) return MOD_WINDOW;
     if (strcmp(modstr, "clock") == 0) return MOD_CLOCK;
+    if (strcmp(modstr, "wifi") == 0) return MOD_WIFI;
     if (strcmp(modstr, "volume") == 0) return MOD_VOLUME;
-    if (strcmp(modstr, "mic") == 0) return MOD_MIC;
-    if (strcmp(modstr, "disk") == 0) return MOD_DISK;
+    if (strcmp(modstr, "disks") == 0) return MOD_DISKS;
+    if (strcmp(modstr, "proc") == 0) return MOD_PROC;
     if (strcmp(modstr, "ram") == 0) return MOD_RAM;
+    if (strcmp(modstr, "system") == 0) return MOD_SYSTEM;
     if (strcmp(modstr, "empty") == 0) return MOD_EMPTY;
 
     return MOD_EMPTY;
@@ -206,6 +208,36 @@ void deserialize_clock(Config *c, toml_result_t *r)
     deserialize_style(&c->clock, r, "clock");
 }
 
+void deserialize_wifi(Config *c, toml_result_t *r)
+{
+    toml_datum_t d = toml_seek(r->toptab, "wifi.levels");
+
+    const char *default_icons[] = {"󰤯", "󰤟", "󰤢",
+                                   "󰤥", "󰤨", "󰤨"};
+
+    if (d.type != TOML_ARRAY) {
+        for (int i = 0; i < 6; i++) {
+            strncpy(c->wifi_levels[i], default_icons[i], 7);
+            c->wifi_levels[i][7] = '\0';
+        }
+    } else {
+        for (int i = 0; i < 6; i++) {
+            if (i < d.u.arr.size) {
+                toml_datum_t elm = d.u.arr.elem[i];
+                if (elm.type == TOML_STRING) {
+                    strncpy(c->wifi_levels[i], elm.u.s, 7);
+                    c->wifi_levels[i][7] = '\0';
+                    continue;
+                }
+            }
+            strncpy(c->wifi_levels[i], default_icons[i], 7);
+            c->wifi_levels[i][7] = '\0';
+        }
+    }
+
+    deserialize_style(&c->wifi, r, "wifi");
+}
+
 void deserialize_config(Config *c, toml_result_t *r)
 {
     deserialize_config_root(c, r);
@@ -215,6 +247,7 @@ void deserialize_config(Config *c, toml_result_t *r)
     deserialize_workspaces(c, r);
     deserialize_window(c, r);
     deserialize_clock(c, r);
+    deserialize_wifi(c, r);
 }
 
 Config *config_load()
@@ -243,10 +276,12 @@ void config_load_font(Config *c)
         for (int i = 32; i < 127; i++) codepoints[count++] = i;
         // Cyrillic
         for (int i = 0x400; i < 0x500; i++) codepoints[count++] = i;
-        int extra[] = {0xf00f0, 0xf130, 0xf131,  0xf023,  0xeee8,
-                       0xf027,  0xf028, 0xf0709, 0xf0904, 0xf0425,
-                       0xf017,  0xf43a, 0xe382};
-        for (int i = 0; i < 10; i++) codepoints[count++] = extra[i];
+        int extra[] = {0xf00f0, 0xf130,  0xf131,  0xf023,  0xeee8,
+                       0xf027,  0xf028,  0xf0709, 0xf0904, 0xf0425,
+                       0xf017,  0xf43a,  0xe382,  0xf092d, 0xf092f,
+                       0xf091f, 0xf0922, 0xf0925, 0xf0928};
+        int extra_count = sizeof(extra) / sizeof(extra[0]);
+        for (int i = 0; i < extra_count; i++) codepoints[count++] = extra[i];
 
         c->font = LoadFontEx(c->fontpath, c->fontsize, codepoints, count);
         SetTextureFilter(c->font.texture, TEXTURE_FILTER_BILINEAR);

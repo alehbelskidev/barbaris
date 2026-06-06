@@ -8,7 +8,6 @@
 #include <string.h>
 #include <time.h>
 
-#include "__debug.h"
 #include "hyprs.h"
 
 // Str will be cut to 256b
@@ -132,6 +131,7 @@ void state_create_workspace(State *s, int id)
     snprintf(name, sizeof(name), "%d", id);
     HyprWorkspace new_ws = {id, ""};
     strncpy(new_ws.name, name, sizeof(new_ws.name) - 1);
+    new_ws.name[sizeof(new_ws.name) - 1] = '\0';
 
     int i = s->workspaces_count - 1;
 
@@ -167,6 +167,22 @@ void state_update_time(State *s, char *clock_format)
     struct tm *lt = localtime(&t);
 
     strftime(s->time, sizeof(s->time), clock_format, lt);
+    s->is_dirty = true;
+}
+
+void state_update_wifi(State *s, const char *essid, int signal_dbm)
+{
+    if (!s) return;
+
+    if (essid) {
+        strncpy(s->essid, essid, sizeof(s->essid) - 1);
+        s->essid[sizeof(s->essid) - 1] = '\0';
+    } else {
+        strcpy(s->essid, "No Link");
+    }
+
+    s->signal_dbm = signal_dbm;
+    s->is_dirty = true;
 }
 
 State *state_init(char *clock_format)
@@ -185,7 +201,6 @@ State *state_init(char *clock_format)
 
         if (status > 0) {
             printf("ERROR: initializing State\n");
-            DEBUG_state(s);
         }
 
         state_update_time(s, clock_format);
