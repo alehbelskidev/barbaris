@@ -12,6 +12,7 @@ void hypr_read_sock(int fd, State *s,
                     void (*state_update_active_workspace)(State *, int),
                     void (*state_create_workspace)(State *, int),
                     void (*state_destory_workspace)(State *, int));
+void hypr_dispatch(const char *cmd);
 void hypr_close_sock(int fd);
 
 #endif  // !MOD_WINDOW_H

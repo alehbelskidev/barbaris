@@ -101,6 +101,28 @@ int hypr_request(const char *cmd, char *buf, size_t bufsize)
     return n;
 }
 
+void hypr_dispatch(const char *cmd)
+{
+    char path[256];
+    snprintf(path, sizeof(path), "%s/hypr/%s/.socket.sock",
+             getenv("XDG_RUNTIME_DIR"), getenv("HYPRLAND_INSTANCE_SIGNATURE"));
+
+    int fd = socket(AF_UNIX, SOCK_STREAM, 0);
+
+    struct sockaddr_un addr = {0};
+    addr.sun_family = AF_UNIX;
+    memcpy(addr.sun_path, path, sizeof(addr.sun_path) - 1);
+    addr.sun_path[sizeof(addr.sun_path) - 1] = '\0';
+
+    if (connect(fd, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
+        close(fd);
+        return;
+    }
+
+    write(fd, cmd, strlen(cmd));
+    close(fd);
+}
+
 void hypr_close_sock(int fd)
 {
     close(fd);

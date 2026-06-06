@@ -151,7 +151,7 @@ void ui_prep(Context *ctx)
 }
 
 void draw_module(Context *ctx, float start_offset, Block *blocks, float *alphas,
-                 int count)
+                 int count, void (*hypr_dispatch)(const char *))
 {
     if (count <= 0) return;
 
@@ -186,6 +186,14 @@ void draw_module(Context *ctx, float start_offset, Block *blocks, float *alphas,
 
             DrawRectangleRounded(crect, b->roundness, 3, fg);
             textcolor = ctx->c->theme.bg;
+
+            if (ctx->left_clicked && b->mod == MOD_WORKSPACES &&
+                b->workspace_id != ctx->s->active_workspace_id)
+            {
+                char cmd[64];
+                snprintf(cmd, 64, "/dispatch workspace %d", b->workspace_id);
+                hypr_dispatch(cmd);
+            }
         } else if (b->workspace_id == ctx->s->active_workspace_id) {
             DrawRectangleRounded(crect, b->roundness, 3, ctx->c->theme.fg);
             textcolor = ctx->c->theme.bg;
@@ -204,13 +212,13 @@ void draw_module(Context *ctx, float start_offset, Block *blocks, float *alphas,
     }
 }
 
-void draw_left(Context *ctx)
+void draw_left(Context *ctx, void (*hypr_dispatch)(const char *))
 {
     float left_offset = ctx->c->bar.padding_x;
-    draw_module(ctx, left_offset, left, left_alphas, left_count);
+    draw_module(ctx, left_offset, left, left_alphas, left_count, hypr_dispatch);
 }
 
-void draw_center(Context *ctx)
+void draw_center(Context *ctx, void (*hypr_dispatch)(const char *))
 {
     float total_width = 0;
 
@@ -221,11 +229,12 @@ void draw_center(Context *ctx)
     float center_offset =
         (GetScreenWidth() - ctx->c->bar.padding_x * 2) / 2 - (total_width / 2);
 
-    draw_module(ctx, center_offset, center, center_alphas, center_count);
+    draw_module(ctx, center_offset, center, center_alphas, center_count,
+                hypr_dispatch);
 }
 
-void ui_draw(Context *ctx)
+void ui_draw(Context *ctx, void (*hypr_dispatch)(const char *))
 {
-    draw_left(ctx);
-    draw_center(ctx);
+    draw_left(ctx, hypr_dispatch);
+    draw_center(ctx, hypr_dispatch);
 }

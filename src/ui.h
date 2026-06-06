@@ -26,6 +26,6 @@ typedef struct {
 } Block;
 
 void ui_prep(Context *ctx);
-void ui_draw(Context *ctx);
+void ui_draw(Context *ctx, void (*hypr_dispatch)(const char *));
 
 #endif  // !UI_H

@@ -61,7 +61,7 @@ void deserialize_style(Styles *s, toml_result_t *r, const char *key)
 
     sprintf(buf, "%s.hover", key);
     d = toml_seek(r->toptab, buf);
-    if (d.type == TOML_BOOLEAN) s->hover = d.u.boolean;
+    s->hover = d.type == TOML_BOOLEAN ? d.u.boolean : true;
 }
 
 void deserialize_config_root(Config *c, toml_result_t *r)

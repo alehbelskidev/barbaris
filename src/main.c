@@ -45,6 +45,7 @@ int main(void)
         ctx->mouse_pos = GetMousePosition();
         ctx->mouse_delta = GetMouseDelta();
         ctx->delta_time = GetFrameTime();
+        ctx->left_clicked = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
         hypr_read_sock(fd, ctx->s, &state_update_active_window,
                        &state_update_active_workspace, &state_create_workspace,
                        &state_destroy_workspace);
@@ -52,7 +53,7 @@ int main(void)
 
         BeginDrawing();
         ClearBackground(c->theme.bg);
-        ui_draw(ctx);
+        ui_draw(ctx, &hypr_dispatch);
         EndDrawing();
     }
 
