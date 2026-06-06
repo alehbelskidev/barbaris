@@ -66,7 +66,7 @@ void deserialize_style(Styles *s, toml_result_t *r, const char *key)
 
 void deserialize_config_root(Config *c, toml_result_t *r)
 {
-    int height;
+    int height = 32;
     toml_datum_t d = toml_seek(r->toptab, "height");
     if (d.type == TOML_INT64) height = d.u.int64;
 
@@ -85,7 +85,7 @@ void deserialize_color(toml_result_t *r, Color *color, const char *key)
     sprintf(buf, "theme.%s", key);
     d = toml_seek(r->toptab, buf);
     if (d.type == TOML_STRING) {
-        strncpy(hexstr, d.u.s, sizeof(hexstr));
+        strncpy(hexstr, d.u.s, sizeof(hexstr) - 1);
         sscanf(hexstr + 1, "%02x%02x%02x", &red, &green, &blue);
     }
 
@@ -102,13 +102,12 @@ void deserialize_theme(Config *c, toml_result_t *r)
     deserialize_color(r, &c->theme.accent, "accent");
 }
 
-char *get_font_path(const char *family, const char *style)
+char *get_font_path(FcConfig *fconfig, const char *family, const char *style)
 {
     char *fontpath = NULL;
     char fontstr[1024];
     snprintf(fontstr, sizeof(fontstr), "%s:style=%s", family, style);
 
-    FcConfig *fconfig = FcInitLoadConfigAndFonts();
     FcPattern *pat = FcNameParse((FcChar8 *)fontstr);
     FcConfigSubstitute(fconfig, pat, FcMatchPattern);
     FcDefaultSubstitute(pat);
@@ -132,6 +131,7 @@ char *get_font_path(const char *family, const char *style)
 
 void deserialize_font(Config *c, toml_result_t *r)
 {
+    FcConfig *fconfig = FcInitLoadConfigAndFonts();
     char family[128];
     toml_datum_t d;
 
@@ -142,8 +142,8 @@ void deserialize_font(Config *c, toml_result_t *r)
     const char *fam = d.type == TOML_STRING ? d.u.s : "monospace";
     strncpy(family, fam, sizeof(family));
 
-    c->fontpath = get_font_path(family, "Regular");
-    c->fontpath_bold = get_font_path(family, "ExtraBold");
+    c->fontpath = get_font_path(fconfig, family, "Regular");
+    c->fontpath_bold = get_font_path(fconfig, family, "ExtraBold");
 }
 
 typedef struct {
@@ -243,13 +243,6 @@ void config_load_font(Config *c)
         for (int i = 32; i < 127; i++) codepoints[count++] = i;
         // Cyrillic
         for (int i = 0x400; i < 0x500; i++) codepoints[count++] = i;
-        // Nerd Fonts (1: PUA)
-        for (int i = 0xE000; i <= 0xE89F; i++) codepoints[count++] = i;
-        // (2: Font Awesome, Octicons, Material ...)
-        for (int i = 0xF000; i <= 0xF1AF0; i++) {
-            if (count >= 20000) break;
-            codepoints[count++] = i;
-        }
 
         c->font = LoadFontEx(c->fontpath, c->fontsize, codepoints, count);
         SetTextureFilter(c->font.texture, TEXTURE_FILTER_BILINEAR);

@@ -47,6 +47,7 @@ void hypr_read_sock(int fd, State *s,
 
         while ((end = strchr(line, '\n')) != NULL) {
             *end = '\0';
+            printf("[HYPR EVENLINE='%s']", line);
 
             char event_t[64], arg[108];
 
@@ -62,6 +63,7 @@ void hypr_read_sock(int fd, State *s,
             } else if (strcmp(event_t, "workspace") == 0) {
                 state_update_active_workspace(s, atoi(arg));
             }
+            // createworkspace
 
             line = end + 1;
         }

@@ -1,17 +1,16 @@
 # barbaris — Makefile
-# Requires: cmake (GLFW), wayland-client, wayland-protocols, lua5.4
+# Requires: cmake (GLFW), wayland-client, wayland-protocols
 
 CC      = gcc
-CFLAGS  = -std=c11 -Wall -Wextra -O0 -g -fsanitize=address
+CFLAGS  = -std=c11 -Wall -Wextra
 CFLAGS += -Ivendor/raylib/src
 CFLAGS += -Ivendor/glfw/include
 CFLAGS += -Isrc
-
 CFLAGS += $(shell pkg-config --cflags wayland-client)
+
 LDLIBS  = $(shell pkg-config --libs wayland-client)
 LDLIBS += -lGL -lm -lpthread -ldl -lrt -lfontconfig -lcjson -ltomlc17
 
-# Vendor
 LDLIBS += vendor/raylib/src/libraylib.a
 LDLIBS += vendor/glfw/build/src/libglfw3.a
 
@@ -20,12 +19,23 @@ OBJDIR = tmp/barbaris
 OBJS   = $(patsubst %.c,$(OBJDIR)/%.o,$(SRCS))
 BIN    = bin/barbaris
 
-.PHONY: all clean vendor-glfw vendor-raylib prepare
+.PHONY: all debug release clean vendor-glfw vendor-raylib prepare
 
+all: CFLAGS += -O2
 all: vendor-glfw vendor-raylib $(BIN)
 
-$(BIN): $(OBJS)
+debug: CFLAGS += -O0 -g -fsanitize=address
+debug: LDLIBS += -fsanitize=address
+debug: vendor-glfw vendor-raylib $(BIN)
+
+release: CFLAGS += -O2
+release: vendor-glfw vendor-raylib $(BIN)
+
+$(BIN): $(OBJS) | bin
 	$(CC) $(CFLAGS) -o $@ $^ $(LDLIBS)
+
+bin:
+	mkdir -p $@
 
 $(OBJDIR)/src/%.o: src/%.c | $(OBJDIR)/src
 	$(CC) $(CFLAGS) -c -o $@ $<
@@ -42,7 +52,7 @@ $(OBJDIR)/src/modules:
 prepare:
 	git clone --depth=1 --branch ci https://github.com/anon3989/glfw vendor/glfw
 	git clone --depth=1 --branch master https://github.com/raysan5/raylib vendor/raylib
-	mkdir bin tmp
+	mkdir -p bin tmp
 
 vendor-glfw: vendor/glfw/build/src/libglfw3.a
 
@@ -76,4 +86,3 @@ clean:
 clean-vendor:
 	rm -rf vendor/glfw/build
 	$(MAKE) -C vendor/raylib/src clean
-	rm -rf vendor-raylib
