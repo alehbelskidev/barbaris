@@ -117,7 +117,7 @@ void prep_clock(Context *ctx, Block *blocks, int *counter)
 void format_wifi_state(char *dest, size_t dest_size, const char *essid,
                        int signal_dbm, char wifi_levels[6][8])
 {
-    const char *icon;
+    const char *icon = "󰤭";
 
     if (!dest || dest_size == 0) {
         return;
@@ -141,6 +141,8 @@ void format_wifi_state(char *dest, size_t dest_size, const char *essid,
     if (signal_dbm >= -65) index = 3;
     if (signal_dbm >= -55) index = 4;
     if (signal_dbm >= -45) index = 5;
+
+    icon = wifi_levels[index];
 
     snprintf(dest, dest_size, "%s %s", icon, essid);
 }
