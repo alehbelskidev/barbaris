@@ -243,6 +243,10 @@ void config_load_font(Config *c)
         for (int i = 32; i < 127; i++) codepoints[count++] = i;
         // Cyrillic
         for (int i = 0x400; i < 0x500; i++) codepoints[count++] = i;
+        int extra[] = {0xf00f0, 0xf130, 0xf131,  0xf023,  0xeee8,
+                       0xf027,  0xf028, 0xf0709, 0xf0904, 0xf0425,
+                       0xf017,  0xf43a, 0xe382};
+        for (int i = 0; i < 10; i++) codepoints[count++] = extra[i];
 
         c->font = LoadFontEx(c->fontpath, c->fontsize, codepoints, count);
         SetTextureFilter(c->font.texture, TEXTURE_FILTER_BILINEAR);
